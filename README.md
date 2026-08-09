@@ -388,7 +388,7 @@ Those are product decisions for this stage, not accidental missing architecture.
 
 Do not add everything at once. Validate sharing first, then add the smallest persistence layer that unlocks monetization:
 
-1. **Persistent short portfolio slugs** such as `repofolio.dev/ali`.
+1. **Persistent short portfolio slugs** such as `repofolio.dev/aya`.
 2. **Optional account/GitHub OAuth** only when persistence or higher GitHub limits justify it.
 3. **Custom domains** as a strong paid feature.
 4. **Premium template/customization pack** while keeping the free generator useful.
