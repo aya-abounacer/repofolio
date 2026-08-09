@@ -1,0 +1,409 @@
+# RepoFolio
+
+> Create a professional developer portfolio from GitHub in 60 seconds.
+
+RepoFolio turns a public GitHub profile into a polished, editable developer portfolio. It is intentionally still a small product: no signup, database, payments, AI, or backend. This version is focused on launch readiness — strong generation, autosaved editing, professional templates, a real example portfolio, shareable state, clean PDF export, accessibility basics, SEO metadata, and simple deployment.
+
+<p align="center">
+  <img src="public/og-preview.png" alt="RepoFolio creative portfolio preview" width="100%" />
+</p>
+
+## Three presentation layers, one portfolio model
+
+Every template renders the same `PortfolioData`. Switching a template never duplicates or resets content.
+
+- **Minimal** — restrained, recruiter-first typography and straightforward project rows.
+- **Modern** — polished product-oriented layout with a dark premium feel.
+- **Creative** — editorial typography, asymmetric portrait composition, animated metadata rail, numbered sections, and curated project rows instead of a generic card grid.
+
+## Product hypothesis
+
+Many students, junior developers, recent graduates, and freelancers have useful GitHub work but no portfolio they are proud to send to a recruiter.
+
+RepoFolio tests one question:
+
+**Can a developer go from GitHub username to a portfolio they genuinely want to share in under a minute?**
+
+## Features
+
+### GitHub generation
+
+- GitHub username or profile URL input
+- Public profile + up to 100 owner repositories
+- Repository ranking based on community signal, freshness, description quality, language, homepage, topics, and fork/archive penalties
+- Default selection of the strongest six projects
+- Skills derived from repository languages
+- Repository topics reused as project technologies where available
+- Friendly invalid-user, rate-limit, server-error, loading, zero-repository, and many-repository states
+
+### Portfolio editor
+
+- Three templates: **Minimal, Modern, Creative**
+- Switch templates without changing portfolio content
+- Project select/deselect
+- Project reordering
+- One featured project that leads the portfolio presentation
+- Editable project title, description, technologies, GitHub link, and optional live demo URL
+- GitHub stars and forks
+- Editable hero, name, headline, bio, location, profile image URL, and availability
+- Editable/hideable sections:
+  - About
+  - Experience
+  - Education
+  - Certifications
+  - Achievements
+  - Skills
+  - Projects
+  - Contact
+- Repeatable entries for experience, education, certifications, and achievements
+- Per-GitHub-user local autosave with draft restoration after refresh/reopen
+- Reset to fresh GitHub data without adding accounts or a database
+- Lightweight portfolio readiness checklist
+
+### Appearance
+
+- Light and dark modes
+- Accent color presets + native custom color picker
+- Clean sans, editorial serif, and developer mono font stacks
+- Responsive profile image treatment per template
+- Reduced-motion support
+
+### Launch-ready public experience
+
+- Real `/example` portfolio route that works without GitHub input
+- Polished landing flow with a direct example CTA
+- Generic Open Graph / Twitter social preview image
+- Dynamic browser title, description, canonical URL, theme color, and robots metadata per route
+- Favicon, web app manifest, and `robots.txt`
+- Portfolio referral footer: **Made with RepoFolio**
+- Skip links, keyboard focus styling, reduced-motion handling, and improved responsive states
+- Dedicated 404, generation loading, GitHub error, and public-portfolio error views
+- Vercel SPA rewrites plus basic security/cache headers
+
+### Preview, sharing, and export
+
+- Live preview while editing
+- Desktop/mobile preview controls
+- Dedicated final portfolio preview in a new tab
+- Copyable client-side share URL
+- Versioned, Unicode-safe portfolio serialization
+- Backward-compatible restoration of v1 share links
+- Browser-native **Download PDF** via print / Save as PDF
+- Print-specific layout that removes the studio UI
+
+## Tech stack
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS 4 for the app shell/editor
+- Purpose-built CSS for generated portfolio templates
+- Lucide React
+- Vitest
+- GitHub REST API
+
+No runtime backend is required.
+
+## Architecture
+
+```text
+Browser
+  │
+  ├── LandingPage
+  │     ├── username / github.com/username
+  │     └── /example portfolio
+  │
+  ├── GitHub REST API
+  │     ├── GET /users/{username}
+  │     └── GET /users/{username}/repos?per_page=100&sort=updated&type=owner
+  │
+  ├── portfolio.ts
+  │     ├── rankRepositories()
+  │     ├── derive skills / technologies
+  │     ├── createPortfolioData()
+  │     ├── schema v3 normalization / migration
+  │     └── base64url serializer
+  │
+  ├── StudioPage
+  │     ├── content editor
+  │     ├── project manager
+  │     ├── section editor
+  │     ├── appearance editor
+  │     ├── localStorage draft autosave
+  │     ├── readiness feedback
+  │     └── live desktop/mobile preview
+  │
+  └── PortfolioView
+        ├── MinimalTemplate
+        ├── ModernTemplate
+        └── CreativeTemplate
+```
+
+The important boundary is:
+
+```text
+PortfolioData = content + projects + sections + appearance
+Template      = presentation only
+```
+
+That makes future templates cheap to add without copying business logic.
+
+## Shared portfolio data model
+
+The client model is explicitly versioned:
+
+```ts
+interface PortfolioData {
+  version: 3
+  username: string
+  avatarUrl: string
+  name: string
+  headline: string
+  bio: string
+  location: string
+  githubUrl: string
+  website: string
+  email: string
+  skills: string[]
+  projects: PortfolioProject[]
+  hero: PortfolioHero
+  appearance: PortfolioAppearance
+  sections: PortfolioSections
+}
+```
+
+`encodePortfolio()` stores an envelope containing a schema version and the portfolio. `decodePortfolio()` normalizes the payload and migrates legacy v1/v2 URLs into the v3 model.
+
+This is also the seam for persistence later: a future backend can save the exact same `PortfolioData` document instead of changing the templates/editor architecture.
+
+## Local draft architecture
+
+Editing does not require an account. The studio autosaves the current `PortfolioData` document to `localStorage` under a key scoped to the GitHub username. Returning to the same studio route restores that draft automatically. **Reset to GitHub** clears the local draft and regenerates the portfolio from the public GitHub API.
+
+This is intentionally local-only. Share URLs still serialize the current portfolio state, so there is no hidden persistence layer or database in this version.
+
+## Sharing architecture
+
+Current MVP route:
+
+```text
+/portfolio/{username}?data=<versioned-base64url-state>
+```
+
+The public payload excludes deselected repositories to reduce URL size.
+
+Future product route:
+
+```text
+/{username}
+```
+
+When persistence is eventually introduced, that route only needs to resolve a username/slug to stored `PortfolioData`; `PortfolioView` and all three templates can remain unchanged.
+
+## GitHub API behavior
+
+RepoFolio uses public REST resources only. It deliberately avoids one follow-up request per repository.
+
+```text
+GET https://api.github.com/users/{username}
+GET https://api.github.com/users/{username}/repos?per_page=100&sort=updated&type=owner
+```
+
+Unauthenticated public REST usage is rate-limited by GitHub per originating IP. No personal token is exposed in the browser.
+
+A profile email appears only when GitHub exposes it publicly; users can add/edit the email in the studio.
+
+## Repository ranking
+
+Repositories are not sorted alphabetically. `scoreRepository()` considers:
+
+- stars using a logarithmic community signal
+- forks
+- recent pushes
+- description presence
+- primary language
+- homepage presence
+- repository topics
+- fork penalty
+- archive penalty
+
+All fetched repositories remain editable in the studio. The strongest six are merely the initial selection.
+
+## SEO and social sharing
+
+The static `index.html` contains generic RepoFolio Open Graph / Twitter metadata and a 1200×630 preview image. Route-level metadata is updated in the browser through `src/lib/seo.ts` for the landing page, studio, example, and public portfolio routes.
+
+Because this is still a pure client-side Vite SPA, social crawlers that do not execute JavaScript will receive the generic RepoFolio card rather than a unique card for each encoded portfolio. Fully dynamic per-portfolio Open Graph images/titles should be introduced together with the future persistence/short-URL backend or an edge-rendered route.
+
+## Local development
+
+### Requirements
+
+- Node.js 20+
+- npm 10+
+
+### Install
+
+```bash
+git clone <your-repo-url>
+cd repofolio-mvp
+npm install
+```
+
+### Run
+
+```bash
+npm run dev
+```
+
+### Tests
+
+```bash
+npm test
+```
+
+### Production build
+
+```bash
+npm run build
+```
+
+### Full check
+
+```bash
+npm run check
+```
+
+## Environment variables
+
+**None are required.**
+
+Do not put a GitHub personal access token in a Vite client environment variable. Client-side variables are inspectable. If authenticated GitHub access is added later, keep credentials in a small server/serverless API layer.
+
+## Test coverage included
+
+- username / GitHub URL normalization
+- intelligent repository ranking
+- zero repositories
+- 100 repositories
+- default project selection + featured-project migration
+- skill and technology derivation
+- v3 serialization round-trip with Unicode
+- v1/v2 share-link migration
+- hidden-project removal from public URLs
+- local draft save/restore/reset behavior
+- portfolio readiness calculation
+- GitHub 404 handling
+- GitHub rate-limit handling
+- repository request shape
+- all three templates rendering from the same data model
+
+The template CSS is container-responsive. Desktop and 390px mobile layouts were visually exercised for Minimal, Modern, and Creative during development.
+
+## PDF export
+
+The studio's **Download PDF** action opens a clean portfolio-only print route, waits for fonts/images, then launches the browser print dialog. A4 print CSS preserves the selected portfolio mode, accent colors, typography and template composition while preventing horizontal cropping and keeping project/timeline rows together where practical. Chrome may still show its own URL/date header-footer unless the browser's “Headers and footers” print option is disabled.
+
+Choose **Save as PDF** in Chrome/Edge/Safari.
+
+This is intentionally simpler than adding `html2canvas`, `jsPDF`, or a server-side PDF renderer to the MVP.
+
+## Project structure
+
+```text
+repofolio-mvp-v6/
+├── docs/
+│   ├── landing-preview.svg
+│   ├── template-minimal.png
+│   ├── template-modern.png
+│   ├── template-creative.png
+│   └── template-mobile.png
+├── src/
+│   ├── components/
+│   │   ├── templates/
+│   │   │   ├── shared.tsx
+│   │   │   ├── MinimalTemplate.tsx
+│   │   │   ├── ModernTemplate.tsx
+│   │   │   └── CreativeTemplate.tsx
+│   │   ├── LandingPage.tsx
+│   │   ├── PortfolioView.tsx
+│   │   ├── PortfolioView.test.tsx
+│   │   ├── PublicPortfolioPage.tsx
+│   │   └── StudioPage.tsx
+│   ├── lib/
+│   │   ├── draft.ts
+│   │   ├── draft.test.ts
+│   │   ├── github.ts
+│   │   ├── github.test.ts
+│   │   ├── portfolio.ts
+│   │   ├── portfolio.test.ts
+│   │   ├── readiness.ts
+│   │   └── readiness.test.ts
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   └── types.ts
+├── package.json
+├── vite.config.ts
+└── vercel.json
+```
+
+## Routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Landing + GitHub input |
+| `/example` | Real launch/demo portfolio without GitHub input |
+| `/studio/:username` | Generate, edit, customize, preview, export |
+| `/portfolio/:username?data=...` | Current public/shareable portfolio |
+| `/:username` | Reserved future architecture for persisted portfolio slugs |
+
+## Deployment
+
+The fastest deployment path is Vercel:
+
+1. Push the project to GitHub.
+2. Import the repository into Vercel.
+3. Use `npm run build` with `dist` as the output directory (Vercel normally detects Vite automatically).
+4. Deploy and attach your production domain.
+5. Verify `/`, `/example`, `/studio/<username>`, and a copied `/portfolio/...` URL directly in a fresh browser tab.
+
+`vercel.json` includes the SPA rewrite needed for direct visits to nested routes, conservative security headers, and long-lived caching for fingerprinted `/assets/*` files.
+
+## Intentional product limits
+
+- no accounts
+- no database
+- no analytics yet
+- no custom domains yet
+- no payments
+- no AI copywriting
+- no true GitHub pinned-repository import
+- no private repositories
+- share URLs can become long when users add a lot of custom content
+
+Those are product decisions for this stage, not accidental missing architecture.
+
+## What should come next
+
+Do not add everything at once. Validate sharing first, then add the smallest persistence layer that unlocks monetization:
+
+1. **Persistent short portfolio slugs** such as `repofolio.dev/ali`.
+2. **Optional account/GitHub OAuth** only when persistence or higher GitHub limits justify it.
+3. **Custom domains** as a strong paid feature.
+4. **Premium template/customization pack** while keeping the free generator useful.
+5. **Simple view/click analytics** for job-seeking users.
+
+Payments should come after users repeatedly create and share portfolios, not before.
+
+## Product metric to watch
+
+The most important early metric is:
+
+> **What percentage of generated portfolios are opened/shared after editing?**
+
+If users generate but do not share, improve portfolio quality before adding monetization.
+
+## License
+
+MIT
