@@ -21,7 +21,7 @@ export default async function handler(
     const existingSessionId = req.cookies.session_id;
 
     if (existingSessionId) {
-      await pool.query(
+      const result = await pool.query(
         `
         UPDATE sessions
         SET last_seen = NOW()
@@ -29,13 +29,16 @@ export default async function handler(
         `,
         [existingSessionId]
       );
+      if (result.rowCount && result.rowCount > 0) {
+        return res.json({
+          success: true,
+          sessionId: existingSessionId,
+          existing: true,
+    });
+   }
+  }
 
-      return res.json({
-        success: true,
-        sessionId: existingSessionId,
-        existing: true,
-      });
-    }
+      
 
     const sessionId = crypto.randomUUID();
 
