@@ -19,6 +19,9 @@ export default async function handler(
 
   try {
     const existingSessionId = req.cookies.session_id;
+    const ipAddress = req.headers["x-forwarded-for"] || null;
+    const userAgent = req.headers["user-agent"] || null;
+    const country = req.headers["x-vercel-ip-country"] || null;
 
     if (existingSessionId) {
       const result = await pool.query(
@@ -44,10 +47,10 @@ export default async function handler(
 
     await pool.query(
       `
-      INSERT INTO sessions (id)
-      VALUES ($1)
+      INSERT INTO sessions (id, ip_address, user_agent, country)
+      VALUES ($1, $2, $3, $4)
       `,
-      [sessionId]
+      [sessionId, ipAddress, userAgent, country]
     );
 
     res.setHeader(
