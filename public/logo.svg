@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Repofolio R Logo</title>
+  <desc id="desc">A rounded black square containing a cream geometric R and blue underline.</desc>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="72" fill="#000000"/>
+
+  <!-- Geometric R -->
+  <path
+    fill="#F6F4EA"
+    fill-rule="evenodd"
+    d="
+      M112 88
+      H292
+      C360 88 404 126 404 191
+      C404 238 378 267 340 280
+      L410 368
+      H318
+      L255 291
+      H200
+      V368
+      H112
+      Z
+
+      M200 160
+      V224
+      H282
+      C306 224 318 212 318 192
+      C318 171 305 160 282 160
+      Z
+    "
+  />
+
+  <!-- Blue underline -->
+  <rect x="112" y="400" width="288" height="34" rx="1" fill="#3B82F6"/>
+</svg>
