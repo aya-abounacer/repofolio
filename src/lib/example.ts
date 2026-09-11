@@ -2,15 +2,15 @@ import type { PortfolioData } from '../types'
 
 export const EXAMPLE_PORTFOLIO: PortfolioData = {
   version: 3,
-  username: 'alexmorgan',
-  avatarUrl: '',
-  name: 'Alex Morgan',
+  username: 'maya-chen',
+  avatarUrl: '/example-avatar.jpg',
+  name: 'Maya Chen',
   headline: 'Full-stack developer building focused products for real people.',
   bio: 'I care about reliable software, clear interfaces, and turning ambiguous product ideas into useful experiences. My work spans TypeScript, React, Node.js, and Python.',
-  location: 'Barcelona, Spain',
+  location: 'Vancouver, Canada',
   githubUrl: 'https://github.com',
   website: 'https://example.com',
-  email: 'alex@example.com',
+  email: 'maya.chen@example.com',
   skills: ['TypeScript', 'React', 'Node.js', 'Python', 'PostgreSQL', 'Docker', 'REST APIs', 'Testing'],
   projects: [
     {
@@ -79,7 +79,7 @@ export const EXAMPLE_PORTFOLIO: PortfolioData = {
   appearance: {
     template: 'creative',
     mode: 'dark',
-    accent: '#7cdd5b',
+    accent: '#4a9eff',
     font: 'sans',
   },
   sections: {

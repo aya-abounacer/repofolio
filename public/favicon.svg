@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="16" fill="#0b0d10"/>
-  <path d="M18 17h17c8 0 13 4 13 11 0 5-3 9-8 10l10 9H39l-9-8h-3v8h-9V17Zm9 8v7h8c3 0 5-1 5-4s-2-3-5-3h-8Z" fill="#f4f4f5"/>
-  <rect x="14" y="49" width="36" height="3" rx="1.5" fill="#7cdd5b"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="150 195 1000 900" role="img" aria-labelledby="title desc">
+  <title id="title">RepoFolio logo</title>
+  <desc id="desc">A bold cream R above a blue underline on a transparent background.</desc>
+  <path d="M 230,213 230,876 485,876 487,721 549,721 744,876 957,876 719,698 784,674 816,657 844,637 882,596 900,565 911,537 921,491 923,463 917,403 908,372 890,335 874,312 851,288 812,260 770,240 725,226 667,216 631,213 Z M 486,348 650,348 686,354 716,367 744,393 756,415 761,432 763,477 759,496 749,519 721,548 698,560 675,567 641,572 487,572 Z" fill="#F4EFE7" fill-rule="evenodd"/>
+  <rect x="159" y="980" width="985" height="89" fill="#4A9EFF"/>
 </svg>
