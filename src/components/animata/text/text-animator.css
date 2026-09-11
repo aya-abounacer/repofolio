@@ -1,0 +1,36 @@
+@reference "tailwindcss";
+
+@layer components {
+  .text-animation-stage {
+    display: block;
+    width: 100%;
+  }
+
+  .landing-hero-text-animation {
+    display: block;
+    min-height: 2.94em;
+  }
+
+  .text-animation-title {
+    margin: 0;
+    pointer-events: none;
+    font: inherit;
+    line-height: inherit;
+  }
+
+  .text-animation-unit {
+    display: inline-block;
+    white-space: pre;
+    will-change: transform, opacity, filter;
+  }
+
+  .text-animation-unit.whitespace {
+    will-change: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-hero-text-animation {
+    min-height: 3.92em;
+  }
+}
