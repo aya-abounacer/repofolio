@@ -27,10 +27,15 @@ export default async function handler(
       const result = await pool.query(
         `
         UPDATE sessions
-        SET last_seen = NOW()
+        SET
+          last_seen = NOW(),
+          ip_address = $2,
+          user_agent = $3,
+          country = $4
         WHERE id = $1
+        RETURNING id
         `,
-        [existingSessionId]
+        [existingSessionId, ipAddress, userAgent, country]
       );
       if (result.rowCount && result.rowCount > 0) {
         return res.json({
