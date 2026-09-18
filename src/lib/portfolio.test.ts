@@ -4,8 +4,11 @@ import {
   buildSharePath,
   createPortfolioData,
   decodePortfolio,
+  deriveSkills,
   encodePortfolio,
   normalizeGithubUsername,
+  normalizePortfolioData,
+  PROJECT_DESCRIPTION_PLACEHOLDER,
   rankRepositories,
 } from './portfolio'
 
@@ -40,6 +43,25 @@ function repo(overrides: Partial<GitHubRepo> & Pick<GitHubRepo, 'id' | 'name'>):
 }
 
 describe('normalizeGithubUsername', () => {
+  it.each([
+    [' aya-abounacer ', 'aya-abounacer'],
+    ['HTTPS://GITHUB.COM/aya-abounacer/', 'aya-abounacer'],
+    ['www.github.com/octocat?tab=repositories', 'octocat'],
+    ['https://github.com/octocat/repo', 'octocat'],
+  ])('normalizes %s', (input, expected) => {
+    expect(normalizeGithubUsername(input)).toBe(expected)
+  })
+
+  it.each([
+    '', '   ', 'https://example.com/nizarrahmoun', 'example.com/octocat',
+    'https://github.com.evil.com/octocat', 'https://github.com@evil.com/octocat',
+    'https://evil.com@github.com/octocat', 'ftp://github.com/octocat',
+    'https://github.com', 'https://github.com/', 'https://github.com:8080/octocat',
+    'not a username', '-octocat', 'octocat-', 'octo--cat', 'octo_cat', 'a'.repeat(40),
+  ])('rejects invalid input %s', (input) => {
+    expect(normalizeGithubUsername(input)).toBe('')
+  })
+
   it('accepts usernames and GitHub URLs', () => {
     expect(normalizeGithubUsername('@octocat')).toBe('octocat')
     expect(normalizeGithubUsername('https://github.com/octocat/')).toBe('octocat')
@@ -77,6 +99,36 @@ describe('createPortfolioData', () => {
     const result = createPortfolioData({ ...user, public_repos: 0 }, [])
     expect(result.projects).toEqual([])
     expect(result.sections.projects.visible).toBe(true)
+  })
+
+  it('keeps the intro distinct from About and omits notebook file labels from imported skills', () => {
+    const result = createPortfolioData(user, [
+      repo({ id: 1, name: 'analysis', language: 'Jupyter Notebook' }),
+      repo({ id: 2, name: 'website', language: 'TypeScript' }),
+    ])
+    expect(result.bio).toBe(user.bio)
+    expect(result.sections.about.visible).toBe(false)
+    expect(result.sections.about.text).toBe('')
+    expect(result.skills).toEqual(['TypeScript'])
+    expect(result.projects.find((project) => project.originalName === 'analysis')?.language).toBe('Jupyter Notebook')
+  })
+
+  it('can reimport repository languages without notebook or archived repository labels', () => {
+    const repos = [
+      repo({ id: 1, name: 'site', language: 'TypeScript' }),
+      repo({ id: 2, name: 'notebook', language: 'Jupyter Notebook' }),
+      repo({ id: 3, name: 'old', language: 'Cobol', archived: true }),
+    ]
+    expect(deriveSkills(repos)).toEqual(['TypeScript'])
+  })
+
+  it('removes duplicate About text from older drafts without changing distinct About content', () => {
+    const data = createPortfolioData(user, [])
+    data.sections.about = { visible: true, title: 'About', text: data.bio }
+    expect(normalizePortfolioData(data)?.sections.about).toEqual({ visible: false, title: 'About', text: '' })
+    data.sections.about.text = 'I focus on accessible tools for education.'
+    expect(normalizePortfolioData(data)?.sections.about.text).toBe(data.sections.about.text)
+    expect(normalizePortfolioData(data)?.sections.about.visible).toBe(true)
   })
 
   it('keeps many repositories manageable and selects only the strongest six by default', () => {
@@ -130,5 +182,24 @@ describe('portfolio URL codec', () => {
     const restored = encoded ? decodePortfolio(encoded) : null
     expect(restored?.projects).toHaveLength(1)
     expect(restored?.projects[0].title).toBe(data.projects[0].title)
+  })
+})
+
+
+describe('project description content', () => {
+  it('leaves missing GitHub descriptions empty', () => {
+    const data = createPortfolioData(user, [repo({ id: 1, name: 'empty', description: null })])
+    expect(data.projects[0].description).toBe('')
+  })
+
+  it('cleans instructions from legacy drafts and exported links while preserving real content', () => {
+    const data = createPortfolioData(user, [repo({ id: 1, name: 'legacy' }), repo({ id: 2, name: 'real' })])
+    data.projects[0].description = PROJECT_DESCRIPTION_PLACEHOLDER
+    data.projects[1].description = 'Built a useful tool.'
+    expect(normalizePortfolioData(data)?.projects.map((project) => project.description)).toEqual(['', 'Built a useful tool.'])
+    const encoded = new URL(buildSharePath(data), 'https://example.com').searchParams.get('data')!
+    const raw = JSON.parse(atob(encoded.replace(/-/g, '+').replace(/_/g, '/')))
+    expect(raw.portfolio.projects[0].description).toBe('')
+    expect(decodePortfolio(encoded)?.projects[1].description).toBe('Built a useful tool.')
   })
 })

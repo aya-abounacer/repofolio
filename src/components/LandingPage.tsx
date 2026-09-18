@@ -23,7 +23,7 @@ export function LandingPage() {
     event.preventDefault()
     const normalized = normalizeGithubUsername(username)
     if (!normalized) {
-      setError('Enter a GitHub username or profile URL to continue.')
+      setError('Enter a GitHub username or github.com profile URL.')
       return
     }
     window.location.href = `/studio/${encodeURIComponent(normalized)}`
@@ -41,7 +41,7 @@ export function LandingPage() {
           <span>RepoFolio</span>
         </a>
         <div className="flex items-center gap-4 text-sm">
-          <a href="#how-it-works" className="hidden text-zinc-500 transition hover:text-white sm:inline">How it works</a>
+          <a href="#how-it-works" className="hidden text-zinc-400 transition hover:text-white sm:inline">How it works</a>
           <a href="/example" className="landing-nav-example"><Eye size={15} /> Example</a>
         </div>
       </nav>
@@ -65,7 +65,7 @@ export function LandingPage() {
           </p>
 
           <form id="generator" onSubmit={handleSubmit} className="mt-9 max-w-xl scroll-mt-6">
-            <label htmlFor="github-username" className="mb-2 block text-xs font-medium uppercase tracking-[0.13em] text-zinc-600">GitHub profile</label>
+            <label htmlFor="github-username" className="mb-2 block text-xs font-medium uppercase tracking-[0.13em] text-zinc-400">GitHub profile</label>
             <div className="landing-generator group">
               <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
                 <Github size={18} className="shrink-0 text-zinc-500" aria-hidden="true" />
@@ -82,7 +82,7 @@ export function LandingPage() {
                   autoComplete="off"
                   autoCapitalize="none"
                   spellCheck={false}
-                  className="h-12 w-full bg-transparent text-base text-white outline-none placeholder:text-zinc-600"
+                  className="h-12 w-full bg-transparent text-base text-white outline-none placeholder:text-zinc-400"
                 />
               </div>
               <button type="submit" className="landing-generate-button">
@@ -90,10 +90,10 @@ export function LandingPage() {
               </button>
             </div>
             {error ? <p id="github-error" role="alert" className="mt-3 text-sm text-rose-300">{error}</p> : null}
-            <p id="github-help" className="mt-3 text-xs leading-5 text-zinc-600">Public GitHub data only. Your edits stay in your browser until you share them.</p>
+            <p id="github-help" className="mt-3 text-xs leading-5 text-zinc-400">Public GitHub data only. Your edits stay in your browser until you share them.</p>
           </form>
 
-          <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-500">
+          <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-400">
             {['3 portfolio templates', 'Autosaved editing', 'Share + PDF export'].map((item) => (
               <span key={item} className="inline-flex items-center gap-2"><Check size={14} className="text-emerald-400" /> {item}</span>
             ))}
@@ -126,9 +126,9 @@ export function LandingPage() {
       <section id="how-it-works" className="border-t border-white/8 bg-black/10 scroll-mt-8">
         <div className="mx-auto w-full max-w-7xl px-5 py-20 sm:px-6 lg:px-8">
           <div className="mb-10 max-w-2xl">
-            <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-600">How it works</p>
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-400">How it works</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">From your GitHub to a professional portfolio.</h2>
-            <p className="mt-3 text-sm text-zinc-500">Just your GitHub link. RepoFolio does the rest.</p>
+            <p className="mt-3 text-sm text-zinc-400">Just your GitHub link. RepoFolio does the rest.</p>
           </div>
           <StepsJourney />
         </div>
@@ -137,7 +137,7 @@ export function LandingPage() {
       <section className="landing-final-cta border-t border-white/8">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 py-16 sm:px-6 md:flex-row md:items-end md:justify-between lg:px-8">
           <div className="max-w-2xl">
-            <p className="text-xs uppercase tracking-[0.14em] text-zinc-600">One useful portfolio first</p>
+            <p className="text-xs uppercase tracking-[0.14em] text-zinc-400">One useful portfolio first</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">Make recruiters curious enough to click the project.</h2>
           </div>
           <a href="#generator" className="landing-bottom-cta">Build yours <ArrowRight size={16} /></a>

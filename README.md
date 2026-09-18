@@ -2,7 +2,7 @@
 
 > Create a professional developer portfolio from GitHub in 60 seconds.
 
-RepoFolio turns a public GitHub profile into a polished, editable developer portfolio. It is intentionally still a small product: no signup, database, payments, AI, or backend. This version is focused on launch readiness — strong generation, autosaved editing, professional templates, a real example portfolio, shareable state, clean PDF export, accessibility basics, SEO metadata, and simple deployment.
+RepoFolio turns a public GitHub profile into a polished, editable developer portfolio. It is intentionally still a small product: no signup, payments, or AI. This version is focused on launch readiness — strong generation, autosaved editing, professional templates, a real example portfolio, shareable state, clean PDF export, accessibility basics, SEO metadata, and simple deployment.
 
 <p align="center">
   <img src="public/og-preview.png" alt="RepoFolio creative portfolio preview" width="100%" />
@@ -57,7 +57,7 @@ RepoFolio tests one question:
   - Contact
 - Repeatable entries for experience, education, certifications, and achievements
 - Per-GitHub-user local autosave with draft restoration after refresh/reopen
-- Reset to fresh GitHub data without adding accounts or a database
+- Reset to fresh GitHub data without requiring an account
 - Lightweight portfolio readiness checklist
 
 ### Appearance
@@ -102,7 +102,7 @@ RepoFolio tests one question:
 - Vitest
 - GitHub REST API
 
-No runtime backend is required.
+Saved sharing requires the Vercel API and PostgreSQL; local editing and previews remain browser-based.
 
 ## Architecture
 
@@ -174,31 +174,19 @@ interface PortfolioData {
 
 `encodePortfolio()` stores an envelope containing a schema version and the portfolio. `decodePortfolio()` normalizes the payload and migrates legacy v1/v2 URLs into the v3 model.
 
-This is also the seam for persistence later: a future backend can save the exact same `PortfolioData` document instead of changing the templates/editor architecture.
+The sharing API persists the same normalized PortfolioData document used by the templates.
 
 ## Local draft architecture
 
 Editing does not require an account. The studio autosaves the current `PortfolioData` document to `localStorage` under a key scoped to the GitHub username. Returning to the same studio route restores that draft automatically. **Reset to GitHub** clears the local draft and regenerates the portfolio from the public GitHub API.
 
-This is intentionally local-only. Share URLs still serialize the current portfolio state, so there is no hidden persistence layer or database in this version.
+Drafts stay local. Copy link explicitly saves a public snapshot to PostgreSQL.
 
 ## Sharing architecture
 
-Current MVP route:
+Current shared route: `/p/<username>/<uuid>`. The public page retrieves its saved snapshot from `/api/portfolios?id=<uuid>`. Repeated sharing of identical content in the same session reuses the link; changed content gets a new immutable snapshot. Unselected projects are excluded.
 
-```text
-/portfolio/{username}?data=<versioned-base64url-state>
-```
-
-The public payload excludes deselected repositories to reduce URL size.
-
-Future product route:
-
-```text
-/{username}
-```
-
-When persistence is eventually introduced, that route only needs to resolve a username/slug to stored `PortfolioData`; `PortfolioView` and all three templates can remain unchanged.
+Local preview and PDF use `/preview/<username>`. Old `/portfolio/<username>?data=...` links remain readable for compatibility. See Saved portfolio links below for database setup.
 
 ## GitHub API behavior
 
@@ -233,7 +221,7 @@ All fetched repositories remain editable in the studio. The strongest six are me
 
 The static `index.html` contains generic RepoFolio Open Graph / Twitter metadata and a 1200×630 preview image. Route-level metadata is updated in the browser through `src/lib/seo.ts` for the landing page, studio, example, and public portfolio routes.
 
-Because this is still a pure client-side Vite SPA, social crawlers that do not execute JavaScript will receive the generic RepoFolio card rather than a unique card for each encoded portfolio. Fully dynamic per-portfolio Open Graph images/titles should be introduced together with the future persistence/short-URL backend or an edge-rendered route.
+Because this is still a pure client-side Vite SPA, social crawlers that do not execute JavaScript will receive the generic RepoFolio card rather than a unique card for each encoded portfolio. Fully dynamic per-portfolio Open Graph images/titles should be introduced using server-side metadata or an edge-rendered route.
 
 ## Local development
 
@@ -355,7 +343,9 @@ repofolio-mvp-v6/
 | `/` | Landing + GitHub input |
 | `/example` | Real launch/demo portfolio without GitHub input |
 | `/studio/:username` | Generate, edit, customize, preview, export |
-| `/portfolio/:username?data=...` | Current public/shareable portfolio |
+| `/p/:username/:id` | Saved public portfolio snapshot (legacy `/p/:id` also works) |
+| `/preview/:username` | Local draft preview and PDF |
+| `/portfolio/:username?data=...` | Legacy shared portfolio |
 | `/:username` | Reserved future architecture for persisted portfolio slugs |
 
 ## Deployment
@@ -365,28 +355,27 @@ The fastest deployment path is Vercel:
 1. Push the project to GitHub.
 2. Import the repository into Vercel.
 3. Use `npm run build` with `dist` as the output directory (Vercel normally detects Vite automatically).
-4. Deploy and attach your production domain.
-5. Verify `/`, `/example`, `/studio/<username>`, and a copied `/portfolio/...` URL directly in a fresh browser tab.
+4. Configure DATABASE_URL, apply migrations/001_shared_portfolios.sql, then deploy and attach your domain.
+5. Verify `/`, `/example`, `/studio/<username>`, and a copied `/p/...` URL directly in a fresh browser tab.
 
 `vercel.json` includes the SPA rewrite needed for direct visits to nested routes, conservative security headers, and long-lived caching for fingerprinted `/assets/*` files.
 
 ## Intentional product limits
 
 - no accounts
-- no database
 - no analytics yet
 - no custom domains yet
 - no payments
 - no AI copywriting
 - no true GitHub pinned-repository import
 - no private repositories
-- share URLs can become long when users add a lot of custom content
+- shared snapshots are immutable; editing requires copying a new link
 
 Those are product decisions for this stage, not accidental missing architecture.
 
 ## What should come next
 
-Do not add everything at once. Validate sharing first, then add the smallest persistence layer that unlocks monetization:
+Do not add everything at once. Validate sharing first, then consider account-owned links:
 
 1. **Persistent short portfolio slugs** such as `repofolio.dev/aya`.
 2. **Optional account/GitHub OAuth** only when persistence or higher GitHub limits justify it.
@@ -407,3 +396,50 @@ If users generate but do not share, improve portfolio quality before adding mone
 ## License
 
 MIT
+
+
+## Saved portfolio links
+
+Sharing uses the PostgreSQL database configured by `DATABASE_URL` for `api/session.ts`.
+Apply `migrations/001_shared_portfolios.sql` to that database before deploying the frontend and API together. The existing `sessions` table must already exist. Never expose the connection string through a VITE_ variable.
+
+Use `npx vercel dev` for local frontend and API development after linking the project and pulling development environment variables. Vite alone does not execute API functions. SPA rewrites target only application page routes so Vite modules and runtime URLs are not rewritten to HTML.
+
+Copy link saves an immutable snapshot at `/p/<username>/<uuid>`. Identical content in the same session reuses its link; edits create a new link. Anyone with the link can read it. Unselected projects are excluded. Failed saves show an error, with no fallback to a long URL. The visible link field supports manual copying.
+
+Preview and PDF use `/preview/<username>` to read the latest local draft without publishing. These URLs work only in the editing browser. Existing encoded portfolio links remain supported.
+
+No live database migration or deployment has been performed. Apply the migration and verify a saved link in a separate browser before release. The API limits payloads to 256 KB and new snapshots to 100 per session per day; platform rate limiting is also recommended for anonymous traffic.
+
+Repeated copies of unchanged content reuse the last successful link in memory. Sessions are reused for five minutes and refreshed on an expired-session response. Public snapshot responses are cached for five minutes in browsers and one hour at the CDN; snapshots remain immutable.
+
+## Custom profile photos
+
+In **Hero → Profile photo**, choose **Upload photo**, adjust the crop with Zoom and position sliders, then select **Save photo**. JPG, PNG and WebP files up to 10 MB are accepted. The browser crops to a 512 × 512 JPEG before uploading. The server decodes and re-encodes it, strips metadata, and stores it in public Vercel Blob storage. **Use GitHub photo** restores the original avatar. The existing Show profile image switch controls whether the photo appears.
+
+### One-time setup
+
+1. In the Vercel project's **Storage** tab, create/connect a **public Blob store**. Include Development, Preview, and Production when connecting it. Keep the default environment variable name `BLOB_READ_WRITE_TOKEN`.
+2. In the Neon SQL Editor, run `migrations/002_profile_photo_uploads.sql` in the same database/branch as `DATABASE_URL`. Existing `sessions` and `shared_portfolios` tables are still required. If deployments use different Neon branches, apply the migration to each one.
+3. From this project folder, run:
+
+   ```sh
+   npm install
+   npx vercel pull --environment=development
+   npx vercel dev
+   ```
+
+   Run `npx vercel link` first only if this local project is not already linked. Restart Vercel dev after pulling variables. Normal later starts only need `npx vercel dev`. Vite alone cannot run the upload API.
+4. Deploy the updated code after connecting the store so the production deployment gets `BLOB_READ_WRITE_TOKEN`. Never give that variable a `VITE_` prefix or put it into browser code. Neon stores the URL, not image bytes.
+
+Official setup reference: https://vercel.com/docs/vercel-blob/server-upload
+
+### How shared photos work
+
+- Saving a photo uploads a public image and updates `avatarUrl` in the local draft. Copy link waits for the upload to finish.
+- **Copy link** saves the image's HTTPS URL inside the existing Neon portfolio snapshot. All three templates already render `avatarUrl`, including public portfolios and PDF previews.
+- Later photo edits require a new copied link. Old snapshots retain their own photo; resetting the editor to GitHub does not delete uploaded files or change old snapshots.
+- Test a deployed portfolio in a private/incognito window: upload, Save photo, Copy link, then open the copied link there. A localhost portfolio link is only accessible on your own computer even though its image is stored online.
+- Upload attempts are limited to 20 per anonymous session per day, including failures. `profile_photo_uploads` records reservations and uploaded URLs. Session limits are not account authentication; use platform request limits for public anonymous uploads. Storage retention/cleanup must preserve images referenced by old snapshots.
+
+The Blob store and migration must be configured before uploads will work. This code does not create cloud resources or run migrations automatically.

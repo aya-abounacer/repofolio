@@ -4,6 +4,8 @@ import { ContactLinks, ProfileMeta, ProjectActions, ProjectMeta, RepoFolioAttrib
 
 export function ModernTemplate({ data }: { data: PortfolioData }) {
   const projects = selectedProjects(data)
+  let sectionNumber = 1
+  const nextNumber = () => String(sectionNumber++).padStart(2, '0')
 
   return (
     <div className="modern-template tpl-page">
@@ -16,7 +18,7 @@ export function ModernTemplate({ data }: { data: PortfolioData }) {
       <main id="top" className="tpl-main">
         <section className="modern-hero">
           <div>
-            {data.hero.showStatus && data.hero.status ? <div className="modern-status"><span /> {data.hero.status}</div> : null}
+            {data.hero.availabilityConfirmed && data.hero.showStatus && data.hero.status.trim() ? <div className="modern-status"><span /> {data.hero.status}</div> : null}
             {data.hero.eyebrow ? <p className="tpl-eyebrow">{data.hero.eyebrow}</p> : null}
             <h1>{data.name}</h1>
             <p className="modern-headline">{data.headline}</p>
@@ -30,27 +32,27 @@ export function ModernTemplate({ data }: { data: PortfolioData }) {
 
         {data.sections.about.visible ? (
           <section id="about" className="modern-section">
-            <p className="tpl-section-index">01 / {data.sections.about.title}</p>
+            <p className="tpl-section-index">{nextNumber()} / {data.sections.about.title}</p>
             <div><h2>{data.sections.about.title}</h2><p className="tpl-body-copy">{data.sections.about.text}</p></div>
           </section>
         ) : null}
 
         {data.sections.skills.visible ? (
           <section id="skills" className="modern-section">
-            <p className="tpl-section-index">02 / {data.sections.skills.title}</p>
+            <p className="tpl-section-index">{nextNumber()} / {data.sections.skills.title}</p>
             <div><h2>{data.sections.skills.title}</h2><SkillsList skills={data.skills} /></div>
           </section>
         ) : null}
 
-        {data.sections.experience.visible ? <ModernListSection id="experience" index="03" title={data.sections.experience.title} items={data.sections.experience.items} /> : null}
-        {data.sections.education.visible ? <ModernListSection id="education" index="04" title={data.sections.education.title} items={data.sections.education.items} /> : null}
-        {data.sections.certifications.visible ? <ModernListSection id="certifications" index="05" title={data.sections.certifications.title} items={data.sections.certifications.items} /> : null}
-        {data.sections.achievements.visible ? <ModernListSection id="achievements" index="06" title={data.sections.achievements.title} items={data.sections.achievements.items} /> : null}
+        {data.sections.experience.visible ? <ModernListSection id="experience" index={nextNumber()} title={data.sections.experience.title} items={data.sections.experience.items} /> : null}
+        {data.sections.education.visible ? <ModernListSection id="education" index={nextNumber()} title={data.sections.education.title} items={data.sections.education.items} /> : null}
+        {data.sections.certifications.visible ? <ModernListSection id="certifications" index={nextNumber()} title={data.sections.certifications.title} items={data.sections.certifications.items} /> : null}
+        {data.sections.achievements.visible ? <ModernListSection id="achievements" index={nextNumber()} title={data.sections.achievements.title} items={data.sections.achievements.items} /> : null}
 
         {data.sections.projects.visible ? (
           <section id="projects" className="modern-projects-section">
             <div className="modern-project-heading">
-              <p className="tpl-section-index">07 / {data.sections.projects.title}</p>
+              <p className="tpl-section-index">{nextNumber()} / {data.sections.projects.title}</p>
               <h2>{data.sections.projects.title}</h2>
             </div>
             {projects.length ? (
@@ -69,7 +71,7 @@ export function ModernTemplate({ data }: { data: PortfolioData }) {
 
         {data.sections.contact.visible ? (
           <section id="contact" className="modern-section modern-contact">
-            <p className="tpl-section-index">08 / Contact</p>
+            <p className="tpl-section-index">{nextNumber()} / Contact</p>
             <div><h2>{data.sections.contact.title}</h2><p className="tpl-body-copy">{data.sections.contact.text}</p><ContactLinks data={data} /></div>
           </section>
         ) : null}

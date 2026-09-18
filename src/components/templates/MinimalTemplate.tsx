@@ -15,7 +15,7 @@ export function MinimalTemplate({ data }: { data: PortfolioData }) {
             <p className="minimal-headline">{data.headline}</p>
             <p className="minimal-bio">{data.bio}</p>
             <ProfileMeta data={data} />
-            {data.hero.showStatus && data.hero.status ? <p className="minimal-status">● {data.hero.status}</p> : null}
+            {data.hero.availabilityConfirmed && data.hero.showStatus && data.hero.status.trim() ? <p className="minimal-status">● {data.hero.status}</p> : null}
           </div>
           {data.hero.showImage && data.avatarUrl ? <img className="minimal-avatar" src={data.avatarUrl} alt={`${data.name} profile`} /> : null}
         </section>

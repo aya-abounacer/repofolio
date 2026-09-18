@@ -69,7 +69,10 @@ a { color: inherit; text-decoration: none; }
   outline: none;
   transition: 150ms ease;
 }
-.studio-input::placeholder { color: #3f3f46; }
+.studio-input::placeholder { color: #a1a1aa; }
+select.studio-input { color-scheme: dark; }
+select.studio-input option { color: #e4e4e7; background: #181a20; }
+.studio-search-input { padding-left: 2.5rem; }
 .studio-input:focus { border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.04); }
 
 .preview-toggle { width: 2rem; height: 2rem; border-radius: 0.55rem; color: #52525b; }
@@ -91,32 +94,44 @@ a { color: inherit; text-decoration: none; }
 .studio-label {
   display: block;
   margin-bottom: 0.4rem;
-  color: #71717a;
+  color: #b4b4bd;
   font-size: 0.72rem;
   font-weight: 600;
 }
 
 .studio-editor-panel {
-  border-top: 1px solid rgba(255,255,255,0.07);
+  border-top: 1px solid rgba(255,255,255,0.18);
+  margin-top: 0.45rem;
+  padding-top: 0.45rem;
 }
-.studio-editor-panel:first-of-type { border-top: 0; }
+.studio-editor-panel:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
 .studio-editor-panel > summary {
   position: relative;
-  padding: 1rem 1.8rem 1rem 0;
+  padding: 1rem 2.75rem 1rem 0;
   cursor: pointer;
   list-style: none;
   user-select: none;
 }
 .studio-editor-panel > summary::-webkit-details-marker { display: none; }
 .studio-editor-panel > summary::after {
-  content: "+";
+  content: "";
   position: absolute;
   right: 0.2rem;
-  top: 1rem;
-  color: #52525b;
-  font-size: 1rem;
+  top: 0.8rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 0.5rem;
+  background-color: rgba(255,255,255,0.06);
+  background-image: linear-gradient(currentColor, currentColor), linear-gradient(currentColor, currentColor);
+  background-size: 12px 2px, 2px 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #e4e4e7;
 }
-.studio-editor-panel[open] > summary::after { content: "−"; }
+.studio-editor-panel > summary:hover::after { background-color: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); }
+.studio-editor-panel > summary:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 3px; border-radius: 0.5rem; }
+.studio-editor-panel[open] > summary::after { background-size: 12px 2px, 0 0; }
 .studio-editor-title {
   display: flex;
   align-items: center;
@@ -128,7 +143,7 @@ a { color: inherit; text-decoration: none; }
 .studio-editor-description {
   display: block;
   margin-top: 0.3rem;
-  color: #52525b;
+  color: #a1a1aa;
   font-size: 0.7rem;
   line-height: 1.45;
 }
@@ -243,7 +258,7 @@ a { color: inherit; text-decoration: none; }
   background: rgba(255,255,255,0.012);
   transition: 150ms ease;
 }
-.project-editor-card:not(.project-editor-card-active) { opacity: 0.62; }
+.project-editor-card:not(.project-editor-card-active) { opacity: 0.82; }
 .project-editor-card-active { border-color: rgba(255,255,255,0.13); background: rgba(255,255,255,0.03); }
 .project-order-button {
   display: inline-grid;
@@ -257,9 +272,9 @@ a { color: inherit; text-decoration: none; }
 }
 .project-order-button:hover:not(:disabled) { color: white; background: rgba(255,255,255,0.05); }
 .project-order-button:disabled { opacity: 0.25; cursor: default; }
-.project-stats { margin: 0; color: #52525b; font-size: 0.65rem; }
+.project-stats { margin: 0; color: #a1a1aa; font-size: 0.65rem; }
 .editor-divider { height: 1px; background: rgba(255,255,255,0.06); }
-.studio-empty { border: 1px dashed rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 1rem; color: #71717a; font-size: 0.75rem; line-height: 1.6; }
+.studio-empty { border: 1px dashed rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 1rem; color: #a1a1aa; font-size: 0.75rem; line-height: 1.6; }
 .studio-print-portfolio { display: none; }
 
 /* Shared generated portfolio foundation */
@@ -1178,7 +1193,7 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   gap: 0.45rem;
   margin-top: 1.2rem;
-  color: #71717a;
+  color: #b4b4bd;
   font-size: 0.75rem;
   transition: color 150ms ease;
 }

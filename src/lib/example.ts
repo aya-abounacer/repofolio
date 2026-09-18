@@ -74,6 +74,7 @@ export const EXAMPLE_PORTFOLIO: PortfolioData = {
     eyebrow: 'Full-stack developer',
     status: 'Open to product engineering roles',
     showStatus: true,
+    availabilityConfirmed: true,
     showImage: true,
   },
   appearance: {

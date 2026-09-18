@@ -4,12 +4,15 @@ import { fetchGithubPortfolioSource } from '../lib/github'
 import { createPortfolioData, decodePortfolio } from '../lib/portfolio'
 import { usePageMeta } from '../lib/seo'
 import type { PortfolioData } from '../types'
+import { loadSharedPortfolio } from '../lib/sharing'
+import { loadPortfolioDraft } from '../lib/draft'
 import { PortfolioView } from './PortfolioView'
 
-export function PublicPortfolioPage({ username }: { username: string }) {
+export function PublicPortfolioPage({ username = '', shareId, localPreview = false }: { username?: string; shareId?: string; localPreview?: boolean }) {
   const searchParams = useMemo(() => new URLSearchParams(window.location.search), [])
   const printMode = searchParams.get('print') === '1'
   const [data, setData] = useState<PortfolioData | null>(() => {
+    if (shareId || localPreview) return null
     const encoded = searchParams.get('data')
     return encoded ? decodePortfolio(encoded) : null
   })
@@ -19,24 +22,32 @@ export function PublicPortfolioPage({ username }: { username: string }) {
   usePageMeta({
     title: data ? `${data.name} — Developer portfolio` : `@${username} — Developer portfolio`,
     description: data?.bio || `Developer portfolio for @${username}, generated with RepoFolio.`,
-    path: `/portfolio/${encodeURIComponent(username)}`,
+    path: shareId ? `/p/${encodeURIComponent(data?.username || username)}/${shareId}` : localPreview ? `/preview/${encodeURIComponent(username)}` : `/portfolio/${encodeURIComponent(username)}`,
     themeColor: data?.appearance.mode === 'light' ? '#f5f3ed' : '#11130f',
-    robots: printMode ? 'noindex,nofollow' : 'index,follow',
+    robots: printMode || localPreview || Boolean(shareId) ? 'noindex,nofollow' : 'index,follow',
   })
 
   useEffect(() => {
     if (data) return
     void (async () => {
       try {
-        const source = await fetchGithubPortfolioSource(username)
-        setData(createPortfolioData(source.user, source.repos))
+        if (shareId) {
+          setData(await loadSharedPortfolio(shareId))
+        } else if (localPreview) {
+          const draft = loadPortfolioDraft(username)
+          if (!draft) throw new Error('This preview is only available on the device where you edited it. Use Copy link in the editor to share it.')
+          setData(draft.portfolio)
+        } else {
+          const source = await fetchGithubPortfolioSource(username)
+          setData(createPortfolioData(source.user, source.repos))
+        }
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : 'Could not load this portfolio.')
       } finally {
         setLoading(false)
       }
     })()
-  }, [data, username])
+  }, [data, username, shareId, localPreview])
 
   useEffect(() => {
     if (!printMode || !data) return
@@ -65,8 +76,8 @@ export function PublicPortfolioPage({ username }: { username: string }) {
         <div className="public-state-card" role="status" aria-live="polite">
           <div className="public-state-icon"><LoaderCircle className="animate-spin" size={22} /></div>
           <p className="public-state-kicker">RepoFolio</p>
-          <h1>Opening @{username}</h1>
-          <p>Loading the public GitHub profile and preparing the portfolio.</p>
+          <h1>{shareId ? 'Opening saved portfolio' : `Opening @${username}`}</h1>
+          <p>Loading your portfolio.</p>
         </div>
       </main>
     )

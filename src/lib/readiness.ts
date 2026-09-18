@@ -1,3 +1,4 @@
+import { getProjectsMissingDescriptions } from './portfolio'
 import type { PortfolioData } from '../types'
 
 export interface ReadinessItem {
@@ -16,6 +17,7 @@ export interface PortfolioReadiness {
 
 export function getPortfolioReadiness(data: PortfolioData): PortfolioReadiness {
   const selectedProjects = data.projects.filter((project) => project.selected)
+  const missingDescriptions = getProjectsMissingDescriptions(data)
   const hasBackground =
     (data.sections.experience.visible && data.sections.experience.items.some((item) => item.title.trim())) ||
     (data.sections.education.visible && data.sections.education.items.some((item) => item.title.trim()))
@@ -33,8 +35,8 @@ export function getPortfolioReadiness(data: PortfolioData): PortfolioReadiness {
     },
     {
       id: 'projects',
-      label: 'At least 3 selected projects',
-      complete: selectedProjects.length >= 3 || (data.projects.length > 0 && selectedProjects.length === data.projects.length),
+      label: 'Selected projects have descriptions',
+      complete: missingDescriptions.length === 0 && (selectedProjects.length >= 3 || (data.projects.length > 0 && selectedProjects.length === data.projects.length)),
     },
     {
       id: 'background',
@@ -55,6 +57,6 @@ export function getPortfolioReadiness(data: PortfolioData): PortfolioReadiness {
     completed,
     total,
     percent: Math.round((completed / total) * 100),
-    ready: completed >= 4,
+    ready: completed >= 4 && missingDescriptions.length === 0,
   }
 }
