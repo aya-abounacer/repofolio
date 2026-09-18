@@ -1,3 +1,4 @@
+import { cleanProjectDescription } from '../lib/portfolio'
 import type { CSSProperties } from 'react'
 import type { PortfolioData } from '../types'
 import { CreativeTemplate } from './templates/CreativeTemplate'
@@ -10,6 +11,7 @@ interface PortfolioViewProps {
 }
 
 export function PortfolioView({ data, embedded = false }: PortfolioViewProps) {
+  data = { ...data, projects: data.projects.map((project) => ({ ...project, description: cleanProjectDescription(project.description) })) }
   const style = { '--portfolio-accent': data.appearance.accent } as CSSProperties
   const className = [
     'portfolio-root',

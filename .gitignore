@@ -1,4 +1,5 @@
 node_modules
+.npm-photo-cache/
 dist
 .vite
 .DS_Store

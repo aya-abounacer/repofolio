@@ -9,23 +9,40 @@ import type {
 
 export const PORTFOLIO_SCHEMA_VERSION = 3 as const
 
+export const PROJECT_DESCRIPTION_PLACEHOLDER = 'Add a short description that explains the problem, your approach, and the result.'
+
+export function cleanProjectDescription(value: string): string {
+  const description = value.trim()
+  return description === PROJECT_DESCRIPTION_PLACEHOLDER ? '' : description
+}
+
+export function getProjectsMissingDescriptions(data: PortfolioData): PortfolioProject[] {
+  return data.sections.projects.visible
+    ? data.projects.filter((project) => project.selected && !cleanProjectDescription(project.description))
+    : []
+}
+
 const FALLBACK_ACCENT = '#7cdd5b'
 
 export function normalizeGithubUsername(input: string): string {
-  const value = input.trim().replace(/\/+$/, '')
-  if (!value) return ''
+  const value = input.trim()
+  const usernamePattern = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i
+  const username = value.replace(/^@/, '')
+  if (usernamePattern.test(username)) return username
 
   try {
-    const withProtocol = value.startsWith('http://') || value.startsWith('https://') ? value : `https://${value}`
+    const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`
     const url = new URL(withProtocol)
-    if (url.hostname === 'github.com' || url.hostname === 'www.github.com') {
-      return url.pathname.split('/').filter(Boolean)[0] ?? ''
-    }
-  } catch {
-    // Fall through and treat input as a username.
-  }
+    if (
+      !['github.com', 'www.github.com'].includes(url.hostname) ||
+      url.username || url.password || url.port
+    ) return ''
 
-  return value.replace(/^@/, '').split('/')[0]
+    const candidate = url.pathname.split('/').filter(Boolean)[0] ?? ''
+    return usernamePattern.test(candidate) ? candidate : ''
+  } catch {
+    return ''
+  }
 }
 
 export function scoreRepository(repo: GitHubRepo): number {
@@ -52,10 +69,10 @@ export function rankRepositories(repos: GitHubRepo[]): GitHubRepo[] {
   })
 }
 
-function deriveSkills(repos: GitHubRepo[]): string[] {
+export function deriveSkills(repos: GitHubRepo[]): string[] {
   const counts = new Map<string, number>()
   repos.forEach((repo) => {
-    if (!repo.language || repo.archived) return
+    if (!repo.language || repo.archived || repo.language.toLowerCase() === 'jupyter notebook') return
     counts.set(repo.language, (counts.get(repo.language) ?? 0) + 1)
   })
 
@@ -82,12 +99,12 @@ function technologiesForRepo(repo: GitHubRepo): string[] {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))].slice(0, 5)
 }
 
-function defaultSections(bio: string): PortfolioSections {
+function defaultSections(): PortfolioSections {
   return {
     about: {
-      visible: true,
+      visible: false,
       title: 'About',
-      text: bio,
+      text: '',
     },
     experience: {
       visible: false,
@@ -145,7 +162,7 @@ export function createPortfolioData(user: GitHubUser, repos: GitHubRepo[]): Port
     id: repo.id,
     originalName: repo.name,
     title: repo.name,
-    description: repo.description?.trim() || 'Add a short description that explains the problem, your approach, and the result.',
+    description: cleanProjectDescription(repo.description ?? ''),
     url: repo.html_url,
     homepage: repo.homepage ?? '',
     language: repo.language ?? '',
@@ -162,6 +179,7 @@ export function createPortfolioData(user: GitHubUser, repos: GitHubRepo[]): Port
     version: PORTFOLIO_SCHEMA_VERSION,
     username: user.login,
     avatarUrl: user.avatar_url,
+    githubAvatarUrl: user.avatar_url,
     name,
     headline: skills.length
       ? `Software developer building with ${skills.slice(0, 3).join(', ')}`
@@ -175,8 +193,9 @@ export function createPortfolioData(user: GitHubUser, repos: GitHubRepo[]): Port
     projects,
     hero: {
       eyebrow: 'Software developer',
-      status: 'Available for interesting work',
-      showStatus: true,
+      status: '',
+      showStatus: false,
+      availabilityConfirmed: false,
       showImage: true,
     },
     appearance: {
@@ -185,7 +204,7 @@ export function createPortfolioData(user: GitHubUser, repos: GitHubRepo[]): Port
       accent: FALLBACK_ACCENT,
       font: 'sans',
     },
-    sections: defaultSections(bio),
+    sections: defaultSections(),
   }
 }
 
@@ -235,7 +254,7 @@ function normalizeProject(value: unknown, index: number): PortfolioProject | nul
     id,
     originalName,
     title,
-    description: asString(raw.description),
+    description: cleanProjectDescription(asString(raw.description)),
     url: asString(raw.url),
     homepage: asString(raw.homepage),
     language,
@@ -247,8 +266,8 @@ function normalizeProject(value: unknown, index: number): PortfolioProject | nul
   }
 }
 
-function normalizeSections(value: unknown, bio: string): PortfolioSections {
-  const defaults = defaultSections(bio)
+function normalizeSections(value: unknown): PortfolioSections {
+  const defaults = defaultSections()
   if (!value || typeof value !== 'object') return defaults
   const raw = value as Record<string, unknown>
 
@@ -325,11 +344,16 @@ export function normalizePortfolioData(value: unknown): PortfolioData | null {
   const template = appearanceRaw.template === 'minimal' || appearanceRaw.template === 'creative' ? appearanceRaw.template : 'modern'
   const mode = appearanceRaw.mode === 'light' ? 'light' : 'dark'
   const font = appearanceRaw.font === 'editorial' || appearanceRaw.font === 'mono' ? appearanceRaw.font : 'sans'
+  const sections = normalizeSections(raw.sections)
+  if (bio.trim() && sections.about.text.trim() === bio.trim()) {
+    sections.about = { ...sections.about, visible: false, text: '' }
+  }
 
   return {
     version: PORTFOLIO_SCHEMA_VERSION,
     username,
     avatarUrl: asString(raw.avatarUrl),
+    githubAvatarUrl: asString(raw.githubAvatarUrl) || `https://github.com/${encodeURIComponent(username)}.png?size=512`,
     name,
     headline: asString(raw.headline, 'Software developer'),
     bio,
@@ -341,8 +365,9 @@ export function normalizePortfolioData(value: unknown): PortfolioData | null {
     projects,
     hero: {
       eyebrow: asString(heroRaw.eyebrow, 'Software developer'),
-      status: asString(heroRaw.status, 'Available for interesting work'),
-      showStatus: asBoolean(heroRaw.showStatus, true),
+      status: asString(heroRaw.status),
+      showStatus: heroRaw.availabilityConfirmed === true && asBoolean(heroRaw.showStatus, false),
+      availabilityConfirmed: heroRaw.availabilityConfirmed === true,
       showImage: asBoolean(heroRaw.showImage, true),
     },
     appearance: {
@@ -351,7 +376,7 @@ export function normalizePortfolioData(value: unknown): PortfolioData | null {
       accent: normalizeAccent(appearanceRaw.accent),
       font,
     },
-    sections: normalizeSections(raw.sections, bio),
+    sections,
   }
 }
 
@@ -363,7 +388,7 @@ interface PortfolioEnvelope {
 export function encodePortfolio(data: PortfolioData): string {
   const envelope: PortfolioEnvelope = {
     schemaVersion: PORTFOLIO_SCHEMA_VERSION,
-    portfolio: data,
+    portfolio: { ...data, projects: data.projects.map((project) => ({ ...project, description: cleanProjectDescription(project.description) })) },
   }
   const json = JSON.stringify(envelope)
   const bytes = new TextEncoder().encode(json)

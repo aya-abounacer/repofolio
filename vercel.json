@@ -1,7 +1,27 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/example",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/studio/:username",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/portfolio/:username",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/preview/:username",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/p/:id",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/p/:username/:id",
       "destination": "/index.html"
     }
   ],

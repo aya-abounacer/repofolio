@@ -37,3 +37,22 @@ describe('portfolio readiness', () => {
     expect(updated.ready).toBe(true)
   })
 })
+
+
+it('requires descriptions only for selected, visible projects', () => {
+  const data = createPortfolioData(user, repos)
+  data.projects[0].description = '   '
+  expect(getPortfolioReadiness(data).ready).toBe(false)
+  expect(getPortfolioReadiness(data).items.find((item) => item.id === 'projects')?.complete).toBe(false)
+  data.projects[0].description = 'A real project description.'
+  expect(getPortfolioReadiness(data).ready).toBe(true)
+  data.projects[0].description = ''
+  data.projects[0].selected = false
+  expect(getPortfolioReadiness(data).ready).toBe(false)
+  data.sections.education.visible = true
+  data.sections.education.items.push({ id: 'edu', title: 'Degree', subtitle: '', meta: '', description: '' })
+  expect(getPortfolioReadiness(data).ready).toBe(true)
+  data.projects[0].selected = true
+  data.sections.projects.visible = false
+  expect(getPortfolioReadiness(data).ready).toBe(true)
+})

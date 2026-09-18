@@ -48,7 +48,7 @@ export function CreativeTemplate({ data }: { data: PortfolioData }) {
             </figure>
             <div className="creative-portrait-meta">
               <span>GitHub / @{data.username}</span>
-              {data.hero.showStatus && data.hero.status ? <strong>{data.hero.status}</strong> : null}
+              {data.hero.availabilityConfirmed && data.hero.showStatus && data.hero.status.trim() ? <strong>{data.hero.status}</strong> : null}
             </div>
           </div>
         </section>
@@ -57,15 +57,15 @@ export function CreativeTemplate({ data }: { data: PortfolioData }) {
           <div className="creative-ticker-track">
             <span>{data.hero.eyebrow || 'Software developer'}</span>
             <i />
-            <span>{data.location || 'Available remotely'}</span>
+            {data.location.trim() ? <span>{data.location}</span> : null}
             <i />
-            <span>{data.hero.status || 'Open to interesting work'}</span>
+            {data.hero.availabilityConfirmed && data.hero.showStatus && data.hero.status.trim() ? <span>{data.hero.status}</span> : null}
             <i />
             <span>GitHub @{data.username}</span>
             <i />
             <span aria-hidden="true">{data.hero.eyebrow || 'Software developer'}</span>
             <i aria-hidden="true" />
-            <span aria-hidden="true">{data.location || 'Available remotely'}</span>
+            <span aria-hidden="true">{data.location}</span>
             <i aria-hidden="true" />
           </div>
         </div>

@@ -42,6 +42,7 @@ export interface PortfolioHero {
   eyebrow: string
   status: string
   showStatus: boolean
+  availabilityConfirmed?: boolean
   showImage: boolean
 }
 
@@ -96,6 +97,7 @@ export interface PortfolioData {
   version: 3
   username: string
   avatarUrl: string
+  githubAvatarUrl?: string
   name: string
   headline: string
   bio: string
