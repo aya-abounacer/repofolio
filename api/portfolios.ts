@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { Pool } from 'pg'
 import { createHash, randomUUID } from 'node:crypto'
-import { normalizePortfolioData, getProjectsMissingDescriptions } from '../src/lib/portfolio'
+import { normalizePortfolioData, getProjectsMissingDescriptions } from '../src/lib/portfolio.js'
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i

@@ -5,7 +5,7 @@ import type {
   PortfolioProject,
   PortfolioSections,
   PortfolioTimelineItem,
-} from '../types'
+} from '../types.js'
 
 export const PORTFOLIO_SCHEMA_VERSION = 3 as const
 
