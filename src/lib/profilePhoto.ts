@@ -1,4 +1,5 @@
 import { createSession } from './backend'
+import { photoReference } from './photoReference'
 
 export interface PhotoCrop { zoom: number; x: number; y: number }
 
@@ -20,9 +21,25 @@ export async function uploadProfilePhoto(image: string): Promise<string> {
   }
   const result = await response.json().catch(() => null)
   if (!response.ok) throw new Error(result?.error || 'Could not upload your photo. Run the app with Vercel and try again.')
-  const url = typeof result?.url === 'string' ? new URL(result.url) : null
-  if (!url || url.protocol !== 'https:' || !url.hostname.endsWith('.public.blob.vercel-storage.com')) {
+  const url = result?.url
+  if (typeof url !== 'string' || !/^\/api\/profile-photo\?id=[a-f0-9-]{36}$/i.test(url)) {
     throw new Error('The uploaded photo URL could not be read.')
   }
-  return url.href
+  return url
+}
+
+export async function deleteProfilePhoto(avatarUrl: string): Promise<void> {
+  const reference = photoReference(avatarUrl)
+  if (!reference) throw new Error('This is your GitHub photo, not an uploaded photo.')
+  let id = reference.id
+  if (!id && reference.legacy) {
+    const response = await fetch('/api/profile-photo?mine=1', { credentials: 'include', cache: 'no-store' })
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || 'Could not find this photo.')
+    id = result.photos?.find((photo: { id: string; legacy_url?: string }) => photo.legacy_url === reference.legacy)?.id
+  }
+  if (!id) throw new Error('This photo is not available in your current browser session.')
+  const response = await fetch(`/api/profile-photo?id=${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' })
+  const result = await response.json()
+  if (!response.ok) throw new Error(result.error || 'Could not delete this photo. Try again.')
 }

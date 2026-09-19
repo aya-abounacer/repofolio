@@ -12,6 +12,7 @@ Module._load = function(name, ...args) {
   if (name === 'pg') return { Pool: class { query(...args) { return query(...args); } } };
   return originalLoad.call(this, name, ...args);
 };
+require('./register-typescript.cjs');
 const handler = require('../api/portfolios.ts').default;
 Module._load = originalLoad;
 const { saveSharedPortfolio, loadSharedPortfolio } = require('../src/lib/sharing.ts');
@@ -23,10 +24,11 @@ function request(method='POST') {return {method,query:{id},cookies:{session_id:s
 
 test('saves a snapshot with a short ID and excludes unselected projects', async () => {
   const req = request(); req.body.portfolio.projects[1].selected=false;
-  req.body.portfolio.avatarUrl='https://test.public.blob.vercel-storage.com/profile-photos/custom.jpg';
+  req.body.portfolio.avatarUrl=`/api/profile-photo?id=${id}`;
   let saved;
   query = async (sql, params) => {
     if(sql.startsWith('SELECT id FROM sessions')) return {rows:[{id:session}]};
+    if(sql.startsWith('SELECT id FROM profile_photo_uploads')) return {rows:[{id}]};
     if(sql.startsWith('SELECT id FROM shared')) return {rows:[]};
     if(sql.startsWith('SELECT count')) return {rows:[{count:0}]};
     saved=JSON.parse(params[3]);return {rows:[{id}]};
@@ -47,7 +49,7 @@ test('public GET works without session and missing links return 404',async()=>{
   query=async()=>({rows:[]});const missing=response();await handler(req,missing);assert.equal(missing.code,404);
 });
 test('rejects invalid IDs, sessions, cross-origin writes and oversized payloads',async()=>{
-  for(const [patch,code] of [ [{method:'DELETE'},405], [{method:'GET',query:{id:'bad'}},400], [{cookies:{}},401], [{headers:{origin:'https://other.test',host:'repofolio.test'}},403], [{body:{portfolio:{bio:'x'.repeat(256001)}}},413] ]) {
+  for(const [patch,code] of [ [{method:'PATCH'},405], [{method:'GET',query:{id:'bad'}},400], [{cookies:{}},401], [{headers:{origin:'https://other.test',host:'repofolio.test'}},403], [{body:{portfolio:{bio:'x'.repeat(256001)}}},413] ]) {
     query=async()=>({rows:[{id:session}]});const res=response();await handler({...request(),...patch},res);assert.equal(res.code,code);
   }
 });
@@ -73,7 +75,7 @@ test('client returns a short path and propagates save/load errors',async()=>{
 });
 
 
-test('repeated copies reuse the saved link; edits save a new snapshot', async()=>{
+test('every copy checks the server so unpublished links cannot be reused from browser memory', async()=>{
   const original=global.fetch;
   try {
     let saves=0;
@@ -81,9 +83,9 @@ test('repeated copies reuse the saved link; edits save a new snapshot', async()=
     const data={...EXAMPLE_PORTFOLIO,name:'Cache test'};
     const first=await saveSharedPortfolio(data);
     assert.equal(await saveSharedPortfolio(data),first);
-    assert.equal(saves,1);
-    await saveSharedPortfolio({...data,name:'Edited cache test'});
     assert.equal(saves,2);
+    await saveSharedPortfolio({...data,name:'Edited cache test'});
+    assert.equal(saves,3);
   } finally {global.fetch=original;}
 });
 

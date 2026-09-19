@@ -7,6 +7,8 @@ import type {
   PortfolioTimelineItem,
 } from '../types.js'
 
+import { protectedPhotoUrl } from './photoReference.js'
+
 export const PORTFOLIO_SCHEMA_VERSION = 3 as const
 
 export const PROJECT_DESCRIPTION_PLACEHOLDER = 'Add a short description that explains the problem, your approach, and the result.'
@@ -352,7 +354,7 @@ export function normalizePortfolioData(value: unknown): PortfolioData | null {
   return {
     version: PORTFOLIO_SCHEMA_VERSION,
     username,
-    avatarUrl: asString(raw.avatarUrl),
+    avatarUrl: protectedPhotoUrl(asString(raw.avatarUrl)),
     githubAvatarUrl: asString(raw.githubAvatarUrl) || `https://github.com/${encodeURIComponent(username)}.png?size=512`,
     name,
     headline: asString(raw.headline, 'Software developer'),

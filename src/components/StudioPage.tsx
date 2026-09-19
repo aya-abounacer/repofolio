@@ -24,6 +24,7 @@ import {
 import { clearPortfolioDraft, loadPortfolioDraft, savePortfolioDraft } from '../lib/draft'
 import { fetchGithubPortfolioSource } from '../lib/github'
 import { ProfilePhotoEditor } from './ProfilePhotoEditor'
+import { PrivacyControls } from './PrivacyControls'
 import { createPortfolioData, deriveSkills, getProjectsMissingDescriptions, PROJECT_DESCRIPTION_PLACEHOLDER } from '../lib/portfolio'
 import { saveSharedPortfolio } from '../lib/sharing'
 import { getPortfolioReadiness } from '../lib/readiness'
@@ -207,7 +208,7 @@ export function StudioPage({ username }: StudioPageProps) {
       </div>
       <div className="studio-workspace mx-auto grid max-w-[1600px] lg:grid-cols-[450px_minmax(0,1fr)]">
         <aside className="studio-sidebar border-b border-white/8 bg-[#0e1014] lg:border-b-0 lg:border-r">
-          <Editor data={portfolio} onChange={setPortfolio} onPreview={openFinalPreview} onPhotoBusyChange={setPhotoBusy} />
+          <Editor data={portfolio} onChange={setPortfolio} onPreview={openFinalPreview} onPhotoBusyChange={setPhotoBusy} onUnpublish={() => { setSavedShareUrl(''); setCopied(false) }} />
         </aside>
 
         <section className="studio-preview-panel min-w-0 bg-[#090a0d] p-3 sm:p-6 lg:p-8">
@@ -234,7 +235,7 @@ export function StudioPage({ username }: StudioPageProps) {
   )
 }
 
-function Editor({ data, onChange, onPreview, onPhotoBusyChange }: { data: PortfolioData; onChange: Dispatch<SetStateAction<PortfolioData | null>>; onPreview: () => void; onPhotoBusyChange: (busy: boolean) => void }) {
+function Editor({ data, onChange, onPreview, onPhotoBusyChange, onUnpublish }: { data: PortfolioData; onChange: Dispatch<SetStateAction<PortfolioData | null>>; onPreview: () => void; onPhotoBusyChange: (busy: boolean) => void; onUnpublish: () => void }) {
   const [expandedProjectId, setExpandedProjectId] = useState<number | null>(null)
   const [projectSearch, setProjectSearch] = useState('')
   const [projectPage, setProjectPage] = useState(1)
@@ -511,6 +512,9 @@ function Editor({ data, onChange, onPreview, onPhotoBusyChange }: { data: Portfo
         </EditorSection>
       ))}
 
+      <EditorSection title="Shared links" description="Review or unpublish portfolios shared from this browser.">
+        <PrivacyControls key={data.username} kind="links" username={data.username} onRemoved={onUnpublish} />
+      </EditorSection>
       <EditorSection title="Links & contact" description="Only public contact details are prefilled.">
         <Field label="GitHub" value={data.githubUrl} onChange={(value) => patch('githubUrl', value)} />
         <Field label="Website" value={data.website} onChange={(value) => patch('website', value)} placeholder="https://your-site.dev" />

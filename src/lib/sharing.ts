@@ -2,11 +2,8 @@ import { createSession } from './backend'
 import { normalizePortfolioData } from './portfolio'
 import type { PortfolioData } from '../types'
 
-let lastSaved: { payload: string; path: string } | null = null
-
 export async function saveSharedPortfolio(portfolio: PortfolioData): Promise<string> {
   const payload = JSON.stringify({ portfolio: { ...portfolio, projects: portfolio.sections.projects.visible ? portfolio.projects.filter(project => project.selected) : [] } })
-  if (lastSaved?.payload === payload) return lastSaved.path
   await createSession()
   const save = () => fetch('/api/portfolios', {
     method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
@@ -21,7 +18,6 @@ export async function saveSharedPortfolio(portfolio: PortfolioData): Promise<str
   if (!response.ok) throw new Error(result.error || 'Could not save your portfolio. Try again.')
   if (typeof result.id !== 'string' || !/^[a-f0-9-]{36}$/i.test(result.id)) throw new Error('The saved portfolio link could not be read.')
   const path = `/p/${encodeURIComponent(portfolio.username)}/${result.id}`
-  lastSaved = { payload, path }
   return path
 }
 
