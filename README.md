@@ -411,16 +411,16 @@ Preview and PDF use `/preview/<username>` to read the latest local draft without
 
 No live database migration or deployment has been performed. Apply the migration and verify a saved link in a separate browser before release. The API limits payloads to 256 KB and new snapshots to 100 per session per day; platform rate limiting is also recommended for anonymous traffic.
 
-Repeated copies of unchanged content reuse the last successful link in memory. Sessions are reused for five minutes and refreshed on an expired-session response. Public snapshot responses are cached for five minutes in browsers and one hour at the CDN; snapshots remain immutable.
+Each Copy link request checks the server; identical active snapshots are deduplicated there. Unpublished links are never reused. Snapshot responses use no-store. Photo responses allow private browser revalidation, with an access check on every request and no shared CDN caching of the API response. An already open page, downloaded photo, or response cached by the previous deployment cannot be recalled. The previous deployment allowed five-minute browser and one-hour CDN caching.
 
 ## Custom profile photos
 
-In **Hero → Profile photo**, choose **Upload photo**, adjust the crop with Zoom and position sliders, then select **Save photo**. JPG, PNG and WebP files up to 10 MB are accepted. The browser crops to a 512 × 512 JPEG before uploading. The server decodes and re-encodes it, strips metadata, and stores it in public Vercel Blob storage. **Use GitHub photo** restores the original avatar. The existing Show profile image switch controls whether the photo appears.
+In **Hero → Profile photo**, choose **Upload photo**, adjust the crop with Zoom and position sliders, then select **Save photo**. JPG, PNG and WebP files up to 10 MB are accepted. The browser crops to a 512 × 512 JPEG before uploading. The server decodes and re-encodes it, strips metadata, and stores it in private Vercel Blob storage. **Delete photo** permanently deletes the current upload and restores the GitHub avatar. **Past uploads** lets users remove older photos. The existing Show profile image switch controls whether the photo appears.
 
 ### One-time setup
 
-1. In the Vercel project's **Storage** tab, create/connect a **public Blob store**. Include Development, Preview, and Production when connecting it. Keep the default environment variable name `BLOB_READ_WRITE_TOKEN`.
-2. In the Neon SQL Editor, run `migrations/002_profile_photo_uploads.sql` in the same database/branch as `DATABASE_URL`. Existing `sessions` and `shared_portfolios` tables are still required. If deployments use different Neon branches, apply the migration to each one.
+1. In the Vercel project's **Storage** tab, create/connect a **private Blob store**. Include Development, Preview, and Production, use prefix `PRIVATE_BLOB`, and enable a read-write token. The server expects `PRIVATE_BLOB_READ_WRITE_TOKEN`. Keep the old public store and its original `BLOB_READ_WRITE_TOKEN` while migrating old photos; these are two different tokens for two different stores.
+2. In the Neon SQL Editor, apply `migrations/002_profile_photo_uploads.sql` if needed, then `migrations/003_private_photos.sql` in the database/branch used by `DATABASE_URL`. Existing `sessions` and `shared_portfolios` tables are required. Apply to each environment's database. Coordinate migration 003 with the new deployment because it changes the shared-link uniqueness constraint.
 3. From this project folder, run:
 
    ```sh
@@ -430,16 +430,52 @@ In **Hero → Profile photo**, choose **Upload photo**, adjust the crop with Zoo
    ```
 
    Run `npx vercel link` first only if this local project is not already linked. Restart Vercel dev after pulling variables. Normal later starts only need `npx vercel dev`. Vite alone cannot run the upload API.
-4. Deploy the updated code after connecting the store so the production deployment gets `BLOB_READ_WRITE_TOKEN`. Never give that variable a `VITE_` prefix or put it into browser code. Neon stores the URL, not image bytes.
+4. Deploy the updated code after connecting the private store. Never give either token a `VITE_` prefix or put it into browser code. Neon stores the private image URL and owner session; the browser receives only an access-checked `/api/profile-photo?id=...` reference.
 
-Official setup reference: https://vercel.com/docs/vercel-blob/server-upload
+Official setup reference: https://vercel.com/docs/vercel-blob/private-storage
 
 ### How shared photos work
 
-- Saving a photo uploads a public image and updates `avatarUrl` in the local draft. Copy link waits for the upload to finish.
-- **Copy link** saves the image's HTTPS URL inside the existing Neon portfolio snapshot. All three templates already render `avatarUrl`, including public portfolios and PDF previews.
-- Later photo edits require a new copied link. Old snapshots retain their own photo; resetting the editor to GitHub does not delete uploaded files or change old snapshots.
+- Saving a photo uploads a private image. Before sharing, only the owning session cookie can read it through the backend. No redirect or private Blob URL is returned to a visitor.
+- **Copy link** validates photo ownership and attaches its ID to the snapshot. Visitors receive a photo endpoint URL containing that snapshot's ID. The backend checks that the exact snapshot is active, references this photo, and shows the photo. Knowing only a photo ID does not grant access.
+- In **Shared links**, load links owned by this browser and **Unpublish** individual snapshots. Republishing creates a new link; other active snapshots remain available.
+- In **Hero → Delete photo**, deletion removes the current upload from all portfolios using it and restores the GitHub avatar in both the editor and existing shared links. **Past uploads** lets users remove older photos. Access is revoked before storage deletion. If storage deletion fails, retry it from the editor or Past uploads. A photo remains in the management list until deletion finishes.
+- Hiding a photo in the current draft does not delete uploads or alter already shared snapshots. GitHub-hosted photos remain subject to GitHub's own public access.
+- Ownership is currently tied to a browser session, not a verified GitHub account. Clearing/losing cookies or switching devices loses self-service access. Administrator-assisted recovery/deletion and account ownership are separate future work. Uploaded photos remain stored until deleted; scheduled retention cleanup is not yet implemented.
 - Test a deployed portfolio in a private/incognito window: upload, Save photo, Copy link, then open the copied link there. A localhost portfolio link is only accessible on your own computer even though its image is stored online.
-- Upload attempts are limited to 20 per anonymous session per day, including failures. `profile_photo_uploads` records reservations and uploaded URLs. Session limits are not account authentication; use platform request limits for public anonymous uploads. Storage retention/cleanup must preserve images referenced by old snapshots.
+- Upload attempts are limited to 20 per anonymous session per day, including failures. Session limits are not account authentication; use platform request limits for public anonymous uploads.
 
 The Blob store and migration must be configured before uploads will work. This code does not create cloud resources or run migrations automatically.
+
+### Migrating existing public photos
+
+Existing public objects do not become private when new uploads switch stores. Do not delete the old store first. Back up Neon, pause photo/sharing writes for the cutover, apply migration 003, and deploy the new code. Old photos are withheld by the new backend until copied to private storage; unchanged public Blob URLs still work until their files are removed.
+
+From the project folder, use an environment file with the database being migrated and BOTH store tokens. For local development, `vercel pull` puts these in `.vercel/.env.development.local`. Production migration must use the production database/tokens, not an unrelated preview branch.
+
+```sh
+# Report only; no data changes
+node --env-file=.vercel/.env.development.local scripts/migrate-private-photos.mjs
+
+# Copy images, verify their bytes, then update Neon and existing snapshot references
+node --env-file=.vercel/.env.development.local scripts/migrate-private-photos.mjs --apply
+```
+
+Verify photos in the editor, an existing public link, and incognito. The portfolio URLs keep their existing IDs. Old local drafts resolve their former public image URLs through the backend using the retained legacy mapping. Then remove the old public copies:
+
+```sh
+node --env-file=.vercel/.env.development.local scripts/migrate-private-photos.mjs --apply --purge-public
+```
+
+The cleanup flag is a deliberate deletion step. It only removes originals for records with a readable private copy. The script can be rerun after interruption and never deletes the entire store. Objects with no completed upload record, previously deleted records, and files outside this app need a separate administrator audit in the old Blob dashboard. Do not assume the old store is empty just because the migration has finished. Keep its token until legacy deletions and that audit are complete.
+
+Private access cannot revoke a previously downloaded image or an older browser/CDN cache. Legacy encoded `?data=` links also cannot be unpublished through the saved-link manager; migrated/deleted photo access is still enforced by the photo endpoint in the updated app.
+
+### Targeted checks (no live cloud resources used)
+
+```sh
+node scripts/profile-photo.test.cjs
+node scripts/sharing.test.cjs
+node scripts/private-photo-access.test.cjs
+node scripts/photo-migration.test.mjs
+```
