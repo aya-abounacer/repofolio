@@ -286,7 +286,7 @@ function StepsJourney() {
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText('https://repofolio-ochre.vercel.app/username')
+      await navigator.clipboard.writeText('https://www.tfoliot.com/username')
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1500)
     } catch {
@@ -335,7 +335,7 @@ function StepsJourney() {
           <Send size={19} aria-hidden="true" />
           <div ref={laptopRef} className="landing-laptop-wrap">
             <div className="landing-laptop-screen">
-              <div className="landing-laptop-browser"><span /><span /><span /><small>repofolio-ochre.vercel.app/maya-chen</small></div>
+              <div className="landing-laptop-browser"><span /><span /><span /><small>www.tfoliot.com/maya-chen</small></div>
               <div className="landing-laptop-page">
                 <header><small> MAYA CHEN / DEVELOPER</small><nav>Work&nbsp;&nbsp; About&nbsp;&nbsp; Contact</nav></header>
                 <section className="landing-laptop-hero"><small>FULL-STACK DEVELOPER</small><strong>Hi, I'm Maya Chen.</strong><p>Building useful things for the web.</p><i /></section>
@@ -369,7 +369,7 @@ function ExamplePortfolio() {
               <span className="size-2 rounded-full bg-white/15" />
               <span className="size-2 rounded-full bg-white/10" />
               <span className="size-2 rounded-full bg-white/10" />
-              <span className="ml-3 truncate rounded-md bg-white/[0.04] px-3 py-1 text-[10px] text-zinc-600">repofolio-ochre.vercel.app/{EXAMPLE_PORTFOLIO.username}</span>
+              <span className="ml-3 truncate rounded-md bg-white/[0.04] px-3 py-1 text-[10px] text-zinc-600">www.tfoliot.com/{EXAMPLE_PORTFOLIO.username}</span>
               <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-zinc-500 transition group-hover:text-zinc-300">View portfolio <ArrowRight size={11} /></span>
             </div>
             <div className="landing-example-preview">
