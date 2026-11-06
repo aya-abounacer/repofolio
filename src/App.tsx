@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { ExamplePortfolioPage } from "./components/ExamplePortfolioPage";
 import { LandingPage } from "./components/LandingPage";
 import { NotFoundPage } from "./components/NotFoundPage";
+import { LegalPage } from "./components/LegalPage";
 import { PublicPortfolioPage } from "./components/PublicPortfolioPage";
 import { StudioPage } from "./components/StudioPage";
 import { createSession } from "./lib/backend";
@@ -21,6 +22,10 @@ function App() {
 
   const parts = window.location.pathname.split("/").filter(Boolean);
   const [route, username] = parts;
+
+  if (route === "privacy" || route === "terms" || route === "contact") {
+    return <LegalPage kind={route} />;
+  }
 
   if (route === "studio" && username) {
     return <StudioPage username={decodeURIComponent(username)} />;

@@ -168,6 +168,9 @@ export function LandingPage() {
           <div className="landing-footer-base">
             <nav className="landing-footer-links" aria-label="Footer navigation">
               <a href="#how-it-works">How it works <ArrowRight size={13} /></a>
+              <a href="/privacy">Privacy</a>
+              <a href="/terms">Terms</a>
+              <a href="/contact">Contact</a>
             </nav>
             <p>© {new Date().getFullYear()} RepoFolio <span>·</span> Built from public GitHub data.</p>
           </div>
