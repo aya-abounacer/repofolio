@@ -1,4 +1,4 @@
-import { ExternalLink, GitFork, Github, Globe2, Mail, MapPin, Play, Star } from 'lucide-react'
+import { ArrowUpRight, ExternalLink, GitFork, Github, Globe2, Mail, MapPin, Play, Star } from 'lucide-react'
 import type { PortfolioData, PortfolioProject, PortfolioTimelineItem } from '../../types'
 
 export function externalUrl(value: string): string {
@@ -37,11 +37,11 @@ export function selectedProjects(data: PortfolioData): PortfolioProject[] {
     .sort((a, b) => Number(b.featured) - Number(a.featured))
 }
 
-export function ProjectActions({ project }: { project: PortfolioProject }) {
+export function ProjectActions({ project, directional = false }: { project: PortfolioProject; directional?: boolean }) {
   return (
     <div className="tpl-project-actions">
-      <a href={project.url} target="_blank" rel="noreferrer"><Github size={13} /> GitHub</a>
-      {project.homepage ? <a href={externalUrl(project.homepage)} target="_blank" rel="noreferrer"><Play size={13} /> Live demo</a> : null}
+      <a href={project.url} target="_blank" rel="noreferrer">{!directional ? <Github size={13} /> : null} GitHub{directional ? <ArrowUpRight size={15} aria-hidden="true" /> : null}</a>
+      {project.homepage ? <a href={externalUrl(project.homepage)} target="_blank" rel="noreferrer">{!directional ? <Play size={13} /> : null} Live demo{directional ? <ArrowUpRight size={15} aria-hidden="true" /> : null}</a> : null}
     </div>
   )
 }
@@ -60,7 +60,7 @@ export function Technologies({ project }: { project: PortfolioProject }) {
   if (!project.technologies.length) return null
   return (
     <div className="tpl-tech-list">
-      {project.technologies.slice(0, 5).map((tech) => <span key={tech}>{tech}</span>)}
+      {project.technologies.map((tech) => <span key={tech}>{tech}</span>)}
     </div>
   )
 }
@@ -91,18 +91,18 @@ export function SkillsList({ skills }: { skills: string[] }) {
   return <div className="tpl-skills">{skills.map((skill) => <span key={skill}>{skill}</span>)}</div>
 }
 
-export function VisibleNav({ data }: { data: PortfolioData }) {
-  const links = [
+export function VisibleNav({ data, links: customLinks }: { data: PortfolioData; links?: [string, string][] }) {
+  const links = customLinks ?? ([
     data.sections.about.visible && ['about', data.sections.about.title],
     data.sections.experience.visible && ['experience', data.sections.experience.title],
     data.sections.education.visible && ['education', data.sections.education.title],
     data.sections.projects.visible && ['projects', data.sections.projects.title],
     data.sections.contact.visible && ['contact', 'Contact'],
-  ].filter(Boolean) as [string, string][]
+  ].filter(Boolean) as [string, string][]).slice(0, 5)
 
   return (
     <nav aria-label="Portfolio navigation" className="tpl-nav-links">
-      {links.slice(0, 5).map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
+      {links.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
     </nav>
   )
 }

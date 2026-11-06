@@ -4,6 +4,10 @@ import type { PortfolioData } from '../types'
 import { CreativeTemplate } from './templates/CreativeTemplate'
 import { MinimalTemplate } from './templates/MinimalTemplate'
 import { ModernTemplate } from './templates/ModernTemplate'
+import { EditorialTemplate } from './templates/EditorialTemplate'
+import { StudioTemplate } from './templates/StudioTemplate'
+import { TechnicalTemplate } from './templates/TechnicalTemplate'
+import { BrutalistTemplate } from './templates/BrutalistTemplate'
 
 interface PortfolioViewProps {
   data: PortfolioData
@@ -26,6 +30,10 @@ export function PortfolioView({ data, embedded = false }: PortfolioViewProps) {
       {data.appearance.template === 'minimal' ? <MinimalTemplate data={data} /> : null}
       {data.appearance.template === 'modern' ? <ModernTemplate data={data} /> : null}
       {data.appearance.template === 'creative' ? <CreativeTemplate data={data} /> : null}
+      {data.appearance.template === 'editorial' ? <EditorialTemplate data={data} /> : null}
+      {data.appearance.template === 'studio' ? <StudioTemplate data={data} /> : null}
+      {data.appearance.template === 'technical' ? <TechnicalTemplate data={data} /> : null}
+      {data.appearance.template === 'brutalist' ? <BrutalistTemplate data={data} /> : null}
     </div>
   )
 }

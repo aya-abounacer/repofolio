@@ -25,9 +25,10 @@ export interface GitHubRepo {
   archived: boolean
   pushed_at: string
   topics?: string[]
+  languages?: string[]
 }
 
-export type PortfolioTemplate = 'minimal' | 'modern' | 'creative'
+export type PortfolioTemplate = 'minimal' | 'modern' | 'creative' | 'editorial' | 'studio' | 'technical' | 'brutalist'
 export type PortfolioColorMode = 'dark' | 'light'
 export type PortfolioFont = 'sans' | 'editorial' | 'mono'
 
@@ -55,6 +56,7 @@ export interface PortfolioProject {
   homepage: string
   language: string
   technologies: string[]
+  languagesHydrated?: boolean
   stars: number
   forks: number
   selected: boolean

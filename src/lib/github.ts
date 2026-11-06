@@ -1,4 +1,5 @@
 import type { GitHubRepo, GitHubUser } from '../types'
+import { rankRepositories } from './portfolio'
 
 const API = 'https://api.github.com'
 
@@ -39,7 +40,7 @@ async function parseError(response: Response): Promise<never> {
   throw new GithubApiError('GitHub returned an unexpected error. Please try again.', response.status)
 }
 
-export async function fetchGithubPortfolioSource(username: string): Promise<{
+export async function fetchGithubPortfolioSource(username: string, languageRepoNames: string[] = []): Promise<{
   user: GitHubUser
   repos: GitHubRepo[]
 }> {
@@ -54,6 +55,38 @@ export async function fetchGithubPortfolioSource(username: string): Promise<{
 
   const user = (await userResponse.json()) as GitHubUser
   const repos = (await reposResponse.json()) as GitHubRepo[]
+  const rankedRepos = rankRepositories(repos)
+  const requestedNames = new Set(languageRepoNames)
+  const requestedTargets = rankedRepos.filter((repo) => requestedNames.has(repo.name) && !repo.archived && typeof repo.name === 'string')
+  const primaryTargets = rankedRepos.filter((repo) => !repo.archived && !repo.fork && typeof repo.name === 'string')
+  const automaticTargets = primaryTargets.length
+    ? primaryTargets
+    : rankedRepos.filter((repo) => !repo.archived && typeof repo.name === 'string')
+  const languageTargets = (requestedTargets.length ? requestedTargets : automaticTargets).slice(0, 12)
 
-  return { user, repos }
+  const languageResults = await Promise.all(languageTargets.map(async (repo): Promise<[number, string[]]> => {
+    try {
+      const response = await fetch(
+        `${API}/repos/${encodeURIComponent(user.login)}/${encodeURIComponent(repo.name)}/languages`,
+        { headers: headers() },
+      )
+      if (!response.ok) return [repo.id, []]
+
+      const totals = (await response.json()) as Record<string, unknown>
+      const languages = Object.entries(totals)
+        .filter((entry): entry is [string, number] => typeof entry[1] === 'number' && entry[1] > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([language]) => language)
+      return [repo.id, languages]
+    } catch {
+      return [repo.id, []]
+    }
+  }))
+  const languagesByRepo = new Map(languageResults)
+  const enrichedRepos = repos.map((repo) => ({
+    ...repo,
+    ...(languagesByRepo.get(repo.id)?.length ? { languages: languagesByRepo.get(repo.id) } : {}),
+  }))
+
+  return { user, repos: enrichedRepos }
 }

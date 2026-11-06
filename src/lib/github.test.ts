@@ -40,4 +40,29 @@ describe('fetchGithubPortfolioSource', () => {
     expect(String(fetchMock.mock.calls[1][0])).toContain('per_page=100')
     expect(String(fetchMock.mock.calls[1][0])).toContain('type=owner')
   })
+
+  it('adds every reported language to the strongest imported projects', async () => {
+    const repository = {
+      id: 1,
+      name: 'portfolio',
+      description: 'Portfolio',
+      html_url: 'https://github.com/dev/portfolio',
+      homepage: null,
+      language: 'TypeScript',
+      stargazers_count: 4,
+      forks_count: 0,
+      fork: false,
+      archived: false,
+      pushed_at: '2026-08-01T00:00:00Z',
+    }
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response({ login: 'dev' }))
+      .mockResolvedValueOnce(response([repository]))
+      .mockResolvedValueOnce(response({ TypeScript: 8000, CSS: 2400, HTML: 1200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const source = await fetchGithubPortfolioSource('dev')
+    expect(source.repos[0].languages).toEqual(['TypeScript', 'CSS', 'HTML'])
+    expect(String(fetchMock.mock.calls[2][0])).toContain('/repos/dev/portfolio/languages')
+  })
 })

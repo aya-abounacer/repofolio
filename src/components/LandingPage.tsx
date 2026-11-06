@@ -94,7 +94,7 @@ export function LandingPage() {
           </form>
 
           <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-400">
-            {['3 portfolio templates', 'Autosaved editing', 'Share + PDF export'].map((item) => (
+            {['7 portfolio templates', 'Autosaved editing', 'Share + PDF export'].map((item) => (
               <span key={item} className="inline-flex items-center gap-2"><Check size={14} className="text-emerald-400" /> {item}</span>
             ))}
           </div>

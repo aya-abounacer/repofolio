@@ -35,12 +35,14 @@ describe('local portfolio drafts', () => {
     vi.unstubAllGlobals()
   })
 
-  it('saves, restores, and clears a draft by GitHub username', () => {
+  it.each(['editorial', 'studio', 'technical'] as const)('saves, restores, and clears a %s draft by GitHub username', (template) => {
     const data = createPortfolioData(user, [repo])
     data.name = 'Edited Dev'
+    data.appearance.template = template
 
     expect(savePortfolioDraft(data)).toBeTruthy()
     expect(loadPortfolioDraft('DEV')?.portfolio.name).toBe('Edited Dev')
+    expect(loadPortfolioDraft('DEV')?.portfolio.appearance.template).toBe(template)
 
     clearPortfolioDraft('dev')
     expect(loadPortfolioDraft('dev')).toBeNull()
