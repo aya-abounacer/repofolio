@@ -95,7 +95,7 @@ export function TechnicalTemplate({ data }: { data: PortfolioData }) {
     <header className="technical-topbar technical-width">
       <a href="#top" className="technical-app-mark" aria-label="Open profile"><Code2 size={18} aria-hidden="true" /></a>
       <div className="technical-top-menu" aria-hidden="true"><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Run</span></div>
-      <p className="technical-workspace-title"><span>repofolio</span> / @{data.username}</p>
+      <p className="technical-workspace-title"><span>tfoliot</span> / @{data.username}</p>
       <p>{showProjects ? `${String(projects.length).padStart(2, '0')} selected repositories` : 'Engineering portfolio'}</p>
     </header>
 

@@ -1,6 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="150 195 1000 900" role="img" aria-labelledby="title desc">
-  <title id="title">RepoFolio logo</title>
-  <desc id="desc">A bold cream R above a blue underline on a transparent background.</desc>
-  <path d="M 230,213 230,876 485,876 487,721 549,721 744,876 957,876 719,698 784,674 816,657 844,637 882,596 900,565 911,537 921,491 923,463 917,403 908,372 890,335 874,312 851,288 812,260 770,240 725,226 667,216 631,213 Z M 486,348 650,348 686,354 716,367 744,393 756,415 761,432 763,477 759,496 749,519 721,548 698,560 675,567 641,572 487,572 Z" fill="#F4EFE7" fill-rule="evenodd"/>
-  <rect x="159" y="980" width="985" height="89" fill="#4A9EFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="167" height="150" viewBox="0 0 167 150">
+  <path fill="#F4EFE7" d="M13 3H153V45H96V114H54V45H13Z"/>
+  <rect x="1" y="130" width="164" height="15" fill="#4A9EFF"/>
 </svg>

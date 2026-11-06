@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!req.headers.origin || new URL(req.headers.origin).host !== req.headers.host) {
-      return res.status(403).json({ error: 'Sharing must start from RepoFolio.' })
+      return res.status(403).json({ error: 'Sharing must start from tfoliot.' })
     }
     const sessionId = req.cookies.session_id
     if (!sessionId || !uuid.test(sessionId)) return res.status(401).json({ error: 'Start a session before sharing.' })

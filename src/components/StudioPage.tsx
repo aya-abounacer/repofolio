@@ -76,7 +76,7 @@ export function StudioPage({ username }: StudioPageProps) {
   const [savedAt, setSavedAt] = useState<string | null>(null)
 
   usePageMeta({
-    title: portfolio ? `Edit ${portfolio.name} — RepoFolio` : `Generate @${username} — RepoFolio`,
+    title: portfolio ? `Edit ${portfolio.name} — tfoliot` : `Generate @${username} — tfoliot`,
     description: `Customize the developer portfolio generated from @${username}'s public GitHub profile.`,
     path: `/studio/${encodeURIComponent(username)}`,
     robots: 'noindex,nofollow',
@@ -648,7 +648,7 @@ function LoadingScreen({ username }: { username: string }) {
         <div className="studio-state-icon"><LoaderCircle className="animate-spin" size={22} /></div>
         <p className="studio-state-kicker">Generating portfolio</p>
         <h1>Reading @{username}</h1>
-        <p>Fetching the public profile and repositories. RepoFolio will rank the strongest work before opening the editor.</p>
+        <p>Fetching the public profile and repositories. tfoliot will rank the strongest work before opening the editor.</p>
         <div className="studio-state-steps" aria-hidden="true">
           <span>Profile</span><i />
           <span>Repositories</span><i />

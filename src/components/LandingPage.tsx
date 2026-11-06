@@ -14,7 +14,7 @@ export function LandingPage() {
   const [error, setError] = useState('')
 
   usePageMeta({
-    title: 'RepoFolio — Build your developer portfolio from GitHub',
+    title: 'Tfoliot — Build your developer portfolio from GitHub',
     description: 'Turn your public GitHub profile and repositories into a polished, editable developer portfolio in about 60 seconds. No signup required.',
     path: '/',
   })
@@ -37,8 +37,8 @@ export function LandingPage() {
 
       <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 sm:px-6 lg:px-8">
         <a href="/" className="landing-brand">
-          <img src="/favicon.svg" alt="RepoFolio" className="landing-brand-logo" />
-          <span>RepoFolio</span>
+          <img src="/favicon.svg" alt="tfoliot" className="landing-brand-logo" />
+          <span>Tfoliot</span>
         </a>
         <div className="flex items-center gap-4 text-sm">
           <a href="#how-it-works" className="hidden text-zinc-400 transition hover:text-white sm:inline">How it works</a>
@@ -105,7 +105,7 @@ export function LandingPage() {
         <ExamplePortfolio />
       </section>
 
-      <section className="landing-audience-strip" aria-label="Who RepoFolio is for">
+      <section className="landing-audience-strip" aria-label="Who Tfoliot is for">
         <p className="landing-audience-label">Built for</p>
         <TextLoop
           text="Students · Junior developers · Recent graduates · Freelancers · Job seekers"
@@ -128,7 +128,7 @@ export function LandingPage() {
           <div className="mb-10 max-w-2xl">
             <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-400">How it works</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">From your GitHub to a professional portfolio.</h2>
-            <p className="mt-3 text-sm text-zinc-400">Just your GitHub link. RepoFolio does the rest.</p>
+            <p className="mt-3 text-sm text-zinc-400">Just your GitHub link. Tfoliot does the rest.</p>
           </div>
           <StepsJourney />
         </div>
@@ -140,17 +140,17 @@ export function LandingPage() {
             <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-400">Good to know</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">A clearer path from profile to portfolio.</h2>
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              RepoFolio is designed to help you present the public work you already have on GitHub. You stay in control of what you edit, export, and share.
+              Tfoliot is designed to help you present the public work you already have on GitHub. You stay in control of what you edit, export, and share.
             </p>
           </div>
           <div className="divide-y divide-white/10 border-y border-white/10">
             <details className="group py-5" open>
               <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-medium text-white">
-                What does RepoFolio use from GitHub?
+                What does Tfoliot use from GitHub?
                 <span className="text-xl font-light text-zinc-500 transition group-open:rotate-45" aria-hidden="true">+</span>
               </summary>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
-                RepoFolio requests public profile, repository, language, and project information for the GitHub username you enter. It does not request or access private repositories.
+                Tfoliot requests public profile, repository, language, and project information for the GitHub username you enter. It does not request or access private repositories.
               </p>
             </details>
             <details className="group py-5">
@@ -177,7 +177,7 @@ export function LandingPage() {
                 <span className="text-xl font-light text-zinc-500 transition group-open:rotate-45" aria-hidden="true">+</span>
               </summary>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
-                RepoFolio stores the selected portfolio as a shared snapshot and gives you a link. Anyone with that link can view the snapshot until you unpublish it from the browser session that created it.
+                Tfoliot stores the selected portfolio as a shared snapshot and gives you a link. Anyone with that link can view the snapshot until you unpublish it from the browser session that created it.
               </p>
             </details>
           </div>
@@ -208,12 +208,12 @@ export function LandingPage() {
             <div className="landing-footer-copy">
               <p className="landing-footer-kicker">GitHub profile / portfolio output</p>
               <h2 id="landing-footer-title">Make your GitHub<br /><span>worth clicking.</span></h2>
-              <p className="landing-footer-description">RepoFolio uses your public GitHub profile to make a portfolio people want to open.</p>
+              <p className="landing-footer-description">Tfoliot uses your public GitHub profile to make a portfolio people want to open.</p>
             </div>
             <a href="#generator" className="landing-bottom-cta">Build yours <ArrowRight size={16} /></a>
           </div>
 
-          <div className="landing-footer-wordmark" aria-hidden="true">REPOFOLIO</div>
+          <div className="landing-footer-wordmark" aria-hidden="true">TFOLIOT</div>
 
           <div className="landing-footer-base">
             <nav className="landing-footer-links" aria-label="Footer navigation">
@@ -223,7 +223,7 @@ export function LandingPage() {
               <a href="/terms">Terms</a>
               <a href="/contact">Contact</a>
             </nav>
-            <p>© {new Date().getFullYear()} RepoFolio <span>·</span> Built from public GitHub data.</p>
+            <p>© {new Date().getFullYear()} Tfoliot <span>·</span> Built from public GitHub data.</p>
           </div>
         </div>
       </footer>
@@ -236,12 +236,12 @@ const stepDetails = [
   {
     number: '01',
     title: 'Connect',
-    description: 'Enter your GitHub username. RepoFolio fetches your public repositories, languages, and project data.',
+    description: 'Enter your GitHub username. Tfoliot fetches your public repositories, languages, and project data.',
   },
   {
     number: '02',
     title: 'Generate',
-    description: 'RepoFolio organizes your GitHub data into a polished portfolio with your projects, skills, and profile information.',
+    description: 'Tfoliot organizes your GitHub data into a polished portfolio with your projects, skills, and profile information.',
   },
   {
     number: '03',
@@ -363,7 +363,7 @@ function ExamplePortfolio() {
         captionText={EXAMPLE_PORTFOLIO.name}
         className="landing-example-tilt mx-auto w-full max-w-2xl lg:ml-auto"
       >
-        <a href="/example" aria-label="Open example RepoFolio portfolio" className="landing-example-card group relative">
+        <a href="/example" aria-label="Open example Tfoliot portfolio" className="landing-example-card group relative">
           <div className="landing-browser-frame">
             <div className="flex items-center gap-1.5 border-b border-white/8 px-4 py-3.5 sm:px-5">
               <span className="size-2 rounded-full bg-white/15" />
