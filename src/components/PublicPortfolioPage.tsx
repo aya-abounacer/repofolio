@@ -21,7 +21,7 @@ export function PublicPortfolioPage({ username = '', shareId, localPreview = fal
 
   usePageMeta({
     title: data ? `${data.name} — Developer portfolio` : `@${username} — Developer portfolio`,
-    description: data?.bio || `Developer portfolio for @${username}, generated with RepoFolio.`,
+    description: data?.bio || `Developer portfolio for @${username}, generated with tfoliot.`,
     path: shareId ? `/p/${encodeURIComponent(data?.username || username)}/${shareId}` : localPreview ? `/preview/${encodeURIComponent(username)}` : `/portfolio/${encodeURIComponent(username)}`,
     themeColor: data?.appearance.mode === 'light' ? '#f5f3ed' : '#11130f',
     robots: printMode || localPreview || Boolean(shareId) ? 'noindex,nofollow' : 'index,follow',
@@ -75,7 +75,7 @@ export function PublicPortfolioPage({ username = '', shareId, localPreview = fal
       <main className="public-state-page">
         <div className="public-state-card" role="status" aria-live="polite">
           <div className="public-state-icon"><LoaderCircle className="animate-spin" size={22} /></div>
-          <p className="public-state-kicker">RepoFolio</p>
+          <p className="public-state-kicker">tfoliot</p>
           <h1>{shareId ? 'Opening saved portfolio' : `Opening @${username}`}</h1>
           <p>Loading your portfolio.</p>
         </div>

@@ -3,8 +3,8 @@ import { usePageMeta } from '../lib/seo'
 
 export function NotFoundPage() {
   usePageMeta({
-    title: 'Page not found — RepoFolio',
-    description: 'The RepoFolio page you requested could not be found.',
+    title: 'Page not found — tfoliot',
+    description: 'The tfoliot page you requested could not be found.',
     robots: 'noindex,nofollow',
   })
 
@@ -13,7 +13,7 @@ export function NotFoundPage() {
       <div className="public-state-card">
         <p className="public-state-kicker">404</p>
         <h1>That page doesn’t exist.</h1>
-        <p>Build a portfolio from a GitHub profile or open the example to see what RepoFolio generates.</p>
+        <p>Build a portfolio from a GitHub profile or open the example to see what tfoliot generates.</p>
         <div className="public-state-actions">
           <a href="/" className="studio-primary-button"><ArrowLeft size={15} /> Home</a>
           <a href="/example" className="studio-secondary-button"><Eye size={15} /> Example</a>

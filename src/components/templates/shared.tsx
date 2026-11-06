@@ -108,5 +108,5 @@ export function VisibleNav({ data, links: customLinks }: { data: PortfolioData; 
 }
 
 export function RepoFolioAttribution() {
-  return <a className="tpl-attribution" href="/?ref=portfolio">Made with RepoFolio</a>
+  return <a className="tpl-attribution" href="/?ref=portfolio">Made with tfoliot</a>
 }

@@ -59,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   try {
     if (!req.headers.origin || new URL(req.headers.origin).host !== req.headers.host) {
-      return res.status(403).json({ error: 'Upload photos from the RepoFolio editor.' })
+      return res.status(403).json({ error: 'Upload photos from the tfoliot editor.' })
     }
   } catch {
     return res.status(403).json({ error: 'Invalid upload origin.' })
@@ -85,7 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await pool.query('UPDATE profile_photo_uploads SET purged_at = now(), public_deleted_at = CASE WHEN legacy_url IS NOT NULL THEN now() ELSE public_deleted_at END WHERE id = $1', [id])
       return res.json({ deleted: true })
     } catch {
-      return res.status(503).json({ error: 'Deletion could not finish. Access through RepoFolio is blocked once the request is recorded; retry to finish removing stored copies.' })
+      return res.status(503).json({ error: 'Deletion could not finish. Access through tfoliot is blocked once the request is recorded; retry to finish removing stored copies.' })
     }
   }
   const image = req.body?.image
