@@ -134,6 +134,56 @@ export function LandingPage() {
         </div>
       </section>
 
+      <section id="faq" className="border-t border-white/8 scroll-mt-8">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-20 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+          <div className="max-w-md">
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-400">Good to know</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">A clearer path from profile to portfolio.</h2>
+            <p className="mt-4 text-sm leading-7 text-zinc-400">
+              RepoFolio is designed to help you present the public work you already have on GitHub. You stay in control of what you edit, export, and share.
+            </p>
+          </div>
+          <div className="divide-y divide-white/10 border-y border-white/10">
+            <details className="group py-5" open>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-medium text-white">
+                What does RepoFolio use from GitHub?
+                <span className="text-xl font-light text-zinc-500 transition group-open:rotate-45" aria-hidden="true">+</span>
+              </summary>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
+                RepoFolio requests public profile, repository, language, and project information for the GitHub username you enter. It does not request or access private repositories.
+              </p>
+            </details>
+            <details className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-medium text-white">
+                Do I need to create an account?
+                <span className="text-xl font-light text-zinc-500 transition group-open:rotate-45" aria-hidden="true">+</span>
+              </summary>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
+                No signup is required to generate and edit a portfolio. Your edits are saved in your browser. A temporary anonymous session is used for server-backed features such as sharing and profile-photo uploads.
+              </p>
+            </details>
+            <details className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-medium text-white">
+                Can I customize the generated portfolio?
+                <span className="text-xl font-light text-zinc-500 transition group-open:rotate-45" aria-hidden="true">+</span>
+              </summary>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
+                Yes. You can edit the portfolio content, choose from the available templates, preview the result, and print or export it as a PDF through your browser.
+              </p>
+            </details>
+            <details className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-medium text-white">
+                What happens when I share a portfolio?
+                <span className="text-xl font-light text-zinc-500 transition group-open:rotate-45" aria-hidden="true">+</span>
+              </summary>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
+                RepoFolio stores the selected portfolio as a shared snapshot and gives you a link. Anyone with that link can view the snapshot until you unpublish it from the browser session that created it.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
       <section className="landing-final-cta border-t border-white/8">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 py-16 sm:px-6 md:flex-row md:items-end md:justify-between lg:px-8">
           <div className="max-w-2xl">
@@ -168,6 +218,7 @@ export function LandingPage() {
           <div className="landing-footer-base">
             <nav className="landing-footer-links" aria-label="Footer navigation">
               <a href="#how-it-works">How it works <ArrowRight size={13} /></a>
+              <a href="#faq">FAQ</a>
               <a href="/privacy">Privacy</a>
               <a href="/terms">Terms</a>
               <a href="/contact">Contact</a>
