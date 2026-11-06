@@ -8,13 +8,18 @@ RepoFolio turns a public GitHub profile into a polished, editable developer port
   <img src="public/og-preview.png" alt="RepoFolio creative portfolio preview" width="100%" />
 </p>
 
-## Three presentation layers, one portfolio model
+## Seven presentation layers, one portfolio model
 
 Every template renders the same `PortfolioData`. Switching a template never duplicates or resets content.
 
 - **Minimal** — restrained, recruiter-first typography and straightforward project rows.
 - **Modern** — polished product-oriented layout with a dark premium feel.
-- **Creative** — editorial typography, asymmetric portrait composition, animated metadata rail, numbered sections, and curated project rows instead of a generic card grid.
+- **Signature** — editorial typography, asymmetric portrait composition, animated metadata rail, and curated project rows.
+
+- **Editorial / Swiss** — an asymmetric typographic grid, prominent project numbers, and unboxed work.
+- **Atelier** — a compact personal introduction, lightly tinted featured work, and restrained interactions.
+- **IDE Workspace** — an engineering brief with a contents rail, profile specification, and factual repository sheets.
+- **Bold / Neo-Brutalist** - saturated surfaces, strong outlines, playful typography, and a fixed interactive tile background.
 
 ## Product hypothesis
 
@@ -38,7 +43,7 @@ RepoFolio tests one question:
 
 ### Portfolio editor
 
-- Three templates: **Minimal, Modern, Creative**
+- Seven templates: **Minimal, Modern, Signature, Editorial / Swiss, Atelier, IDE Workspace, Bold / Neo-Brutalist**
 - Switch templates without changing portfolio content
 - Project select/deselect
 - Project reordering
@@ -136,7 +141,10 @@ Browser
   └── PortfolioView
         ├── MinimalTemplate
         ├── ModernTemplate
-        └── CreativeTemplate
+        ├── CreativeTemplate
+        ├── EditorialTemplate
+        ├── StudioTemplate
+        └── TechnicalTemplate
 ```
 
 The important boundary is:
@@ -284,9 +292,15 @@ Do not put a GitHub personal access token in a Vite client environment variable.
 - GitHub 404 handling
 - GitHub rate-limit handling
 - repository request shape
-- all three templates rendering from the same data model
+- all six templates rendering from the same data model
 
-The template CSS is container-responsive. Desktop and 390px mobile layouts were visually exercised for Minimal, Modern, and Creative during development.
+The template CSS is container-responsive. Minimal, Modern, and Signature share responsive name fitting, a mobile navigation menu, self-hosted Geist typography, and reduced-motion-aware reveals. The display names Signature and Atelier retain the saved template IDs `creative` and `studio`.
+
+**Editorial / Swiss** is an additional, projects-first presentation with a compact introduction, an asymmetric typographic grid, unboxed project entries, and a mobile Contents disclosure. It uses the existing appearance settings and portfolio fields, keeps every selected project, and omits empty optional sections. Choose it in **Template & style**; drafts, shared snapshots, final previews, and PDF export use the same renderer. It adds no dependencies or database migration. Its scoped stylesheet includes phone, embedded-preview, reduced-motion, and print layouts; rendered browser checks remain part of its visual release review.
+
+**Atelier** is a compact creative-developer presentation: a photo-and-name introduction, lightly tinted featured work, unboxed project entries, and a quiet résumé section. It respects the same content, selection, appearance, privacy, and sharing controls. Its CSS includes mobile, keyboard-focus, reduced-motion, and print treatments, with no additional dependencies.
+
+**IDE Workspace** presents the portfolio as an engineering workspace rather than a fake terminal. The contents rail behaves like a compact file explorer, the active section appears as an editor tab, and the interactive repository browser uses only available facts such as primary language, stack, live-link availability, stars, and forks. A restrained version of Magic UI's open-source Floating 3D Particles canvas spans the full workspace and shifts subtly with the active section, with fewer particles on mobile, off-screen pausing, and a static reduced-motion frame. The name uses a small local decode effect inspired by React Bits' open-source Decrypted Text component, and the template uses the open-source IBM Plex Mono family. About reads like a focused README, timeline data becomes compact system records, and contact becomes a project handoff. Skills live inside an interactive folder built from the supplied open-source FolderFloat component. Visitors can open the folder, inspect a capability, or drag and throw its files; Matter.js provides the small zero-gravity simulation and reduced-motion users receive a static transition.
 
 ## PDF export
 
@@ -438,7 +452,7 @@ Official setup reference: https://vercel.com/docs/vercel-blob/private-storage
 
 - Saving a photo uploads a private image. Before sharing, only the owning session cookie can read it through the backend. No redirect or private Blob URL is returned to a visitor.
 - **Copy link** validates photo ownership and attaches its ID to the snapshot. Visitors receive a photo endpoint URL containing that snapshot's ID. The backend checks that the exact snapshot is active, references this photo, and shows the photo. Knowing only a photo ID does not grant access.
-- In **Shared links**, load links owned by this browser and **Unpublish** individual snapshots. Republishing creates a new link; other active snapshots remain available.
+- In **Published portfolios**, view links owned by this browser and **Unpublish** individual snapshots. Republishing creates a new link; other active snapshots remain available.
 - In **Hero → Delete photo**, deletion removes the current upload from all portfolios using it and restores the GitHub avatar in both the editor and existing shared links. **Past uploads** lets users remove older photos. Access is revoked before storage deletion. If storage deletion fails, retry it from the editor or Past uploads. A photo remains in the management list until deletion finishes.
 - Hiding a photo in the current draft does not delete uploads or alter already shared snapshots. GitHub-hosted photos remain subject to GitHub's own public access.
 - Ownership is currently tied to a browser session, not a verified GitHub account. Clearing/losing cookies or switching devices loses self-service access. Administrator-assisted recovery/deletion and account ownership are separate future work. Uploaded photos remain stored until deleted; scheduled retention cleanup is not yet implemented.

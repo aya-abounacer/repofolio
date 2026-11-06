@@ -1,21 +1,24 @@
 import { ArrowUpRight, ExternalLink, GitFork, Github, Globe2, Mail, MapPin, Star } from 'lucide-react'
 import type { PortfolioData, PortfolioProject, PortfolioTimelineItem } from '../../types'
-import { externalUrl, gmailComposeUrl, ProjectActions, RepoFolioAttribution, selectedProjects, VisibleNav } from './shared'
+import { externalUrl, gmailComposeUrl, ProjectActions, RepoFolioAttribution, selectedProjects } from './shared'
+
+import { RefinedName, RefinedNav, useRefinedMotion } from './refined'
 
 export function CreativeTemplate({ data }: { data: PortfolioData }) {
+  const rootRef = useRefinedMotion(data.username)
   const projects = selectedProjects(data)
   const [featuredProject, ...otherProjects] = projects
   let sectionNumber = 1
   const nextNumber = () => String(sectionNumber++).padStart(2, '0')
 
   return (
-    <div className="creative-template tpl-page">
+    <div ref={rootRef} className="creative-template tpl-page template-refined">
       <header className="tpl-nav creative-nav">
         <a href="#top" className="creative-brand">
           <strong>{data.name}</strong>
           <span>@{data.username}</span>
         </a>
-        <VisibleNav data={data} />
+        <RefinedNav data={data} />
       </header>
 
       <main id="top" className="tpl-main creative-main">
@@ -26,9 +29,7 @@ export function CreativeTemplate({ data }: { data: PortfolioData }) {
               {data.location ? <span><MapPin size={12} /> {data.location}</span> : null}
             </div>
 
-            <h1 className="creative-name">
-              {splitName(data.name).map((line) => <span key={line}>{line}</span>)}
-            </h1>
+            <RefinedName name={data.name} font={data.appearance.font} className="creative-name" />
 
             <div className="creative-hero-bottom">
               <p className="creative-headline">{data.headline}</p>
@@ -39,18 +40,16 @@ export function CreativeTemplate({ data }: { data: PortfolioData }) {
             </div>
           </div>
 
-          <div className="creative-portrait-column">
+          {data.hero.showImage && data.avatarUrl ? <div className="creative-portrait-column">
             <div className="creative-portrait-accent" aria-hidden="true" />
-            <figure className="creative-portrait">
-              {data.hero.showImage && data.avatarUrl
-                ? <img src={data.avatarUrl} alt={`${data.name} profile`} />
-                : <div className="creative-avatar-placeholder">{data.name.slice(0, 1)}</div>}
+            <figure className="creative-portrait refined-portrait">
+              <img src={data.avatarUrl} alt={`${data.name} profile`} />
             </figure>
             <div className="creative-portrait-meta">
               <span>GitHub / @{data.username}</span>
               {data.hero.availabilityConfirmed && data.hero.showStatus && data.hero.status.trim() ? <strong>{data.hero.status}</strong> : null}
             </div>
-          </div>
+          </div> : null}
         </section>
 
         <div className="creative-ticker" aria-label="Portfolio metadata">
@@ -69,6 +68,55 @@ export function CreativeTemplate({ data }: { data: PortfolioData }) {
             <i aria-hidden="true" />
           </div>
         </div>
+
+        {data.sections.projects.visible ? (
+          <CreativeSection id="projects" number={nextNumber()} label={data.sections.projects.title} className="creative-work-section">
+            <div className="creative-work-heading">
+              <h2>{data.sections.projects.title}</h2>
+              <p>A selection of projects and the ideas behind them.</p>
+            </div>
+
+            {featuredProject ? (
+              <article className="creative-featured-project">
+                <div className="creative-featured-number">01</div>
+                <div className="creative-featured-copy">
+                  <span className="creative-project-label">Featured project</span>
+                  <h3>{featuredProject.title}</h3>
+                  <p>{featuredProject.description}</p>
+                  <CreativeTechLine project={featuredProject} />
+                  <ProjectActions project={featuredProject} />
+                </div>
+                <div className="creative-featured-meta">
+                  <CreativeStats project={featuredProject} />
+                  <ArrowUpRight size={28} />
+                </div>
+              </article>
+            ) : <div className="tpl-empty-state">Select at least one repository to show your work here.</div>}
+
+            {otherProjects.length ? (
+              <div className="creative-project-list">
+                {otherProjects.map((project, index) => (
+                  <article
+                    key={project.id}
+                    className={`creative-project-row ${index % 2 ? 'creative-project-row-shift' : ''}`}
+                  >
+                    <span className="creative-project-index">{String(index + 2).padStart(2, '0')}</span>
+                    <div className="creative-project-copy">
+                      <h3>{project.title}</h3>
+                      <p>{project.description}</p>
+                      <ProjectActions project={project} />
+                    </div>
+                    <div className="creative-project-side">
+                      <CreativeTechLine project={project} />
+                      <CreativeStats project={project} />
+                    </div>
+                    <ArrowUpRight className="creative-project-arrow" size={18} />
+                  </article>
+                ))}
+              </div>
+            ) : null}
+          </CreativeSection>
+        ) : null}
 
         {data.sections.about.visible ? (
           <CreativeSection id="about" number={nextNumber()} label={data.sections.about.title}>
@@ -119,54 +167,7 @@ export function CreativeTemplate({ data }: { data: PortfolioData }) {
           </CreativeSection>
         ) : null}
 
-        {data.sections.projects.visible ? (
-          <CreativeSection id="projects" number={nextNumber()} label={data.sections.projects.title} className="creative-work-section">
-            <div className="creative-work-heading">
-              <h2>{data.sections.projects.title}</h2>
-              <p>Selected repositories, arranged by importance rather than as a wall of identical cards.</p>
-            </div>
 
-            {featuredProject ? (
-              <article className="creative-featured-project">
-                <div className="creative-featured-number">01</div>
-                <div className="creative-featured-copy">
-                  <span className="creative-project-label">Featured project</span>
-                  <h3>{featuredProject.title}</h3>
-                  <p>{featuredProject.description}</p>
-                  <CreativeTechLine project={featuredProject} />
-                  <ProjectActions project={featuredProject} />
-                </div>
-                <div className="creative-featured-meta">
-                  <CreativeStats project={featuredProject} />
-                  <ArrowUpRight size={28} />
-                </div>
-              </article>
-            ) : <div className="tpl-empty-state">Select at least one repository to show your work here.</div>}
-
-            {otherProjects.length ? (
-              <div className="creative-project-list">
-                {otherProjects.map((project, index) => (
-                  <article
-                    key={project.id}
-                    className={`creative-project-row ${index % 2 ? 'creative-project-row-shift' : ''}`}
-                  >
-                    <span className="creative-project-index">{String(index + 2).padStart(2, '0')}</span>
-                    <div className="creative-project-copy">
-                      <h3>{project.title}</h3>
-                      <p>{project.description}</p>
-                      <ProjectActions project={project} />
-                    </div>
-                    <div className="creative-project-side">
-                      <CreativeTechLine project={project} />
-                      <CreativeStats project={project} />
-                    </div>
-                    <ArrowUpRight className="creative-project-arrow" size={18} />
-                  </article>
-                ))}
-              </div>
-            ) : null}
-          </CreativeSection>
-        ) : null}
 
         {data.sections.contact.visible ? (
           <section id="contact" className="creative-contact">
@@ -256,7 +257,7 @@ function CreativeTimeline({ title, items }: { title: string; items: PortfolioTim
 function CreativeTechLine({ project }: { project: PortfolioProject }) {
   const technologies = project.technologies.length ? project.technologies : project.language ? [project.language] : []
   if (!technologies.length) return null
-  return <div className="creative-tech-line">{technologies.slice(0, 5).join(' / ')}</div>
+  return <div className="creative-tech-line">{technologies.join(' / ')}</div>
 }
 
 function CreativeStats({ project }: { project: PortfolioProject }) {
@@ -267,11 +268,4 @@ function CreativeStats({ project }: { project: PortfolioProject }) {
       {project.forks > 0 ? <span><GitFork size={11} /> {project.forks}</span> : null}
     </div>
   )
-}
-
-function splitName(name: string): string[] {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length <= 1) return [name]
-  if (parts.length === 2) return parts
-  return [parts.slice(0, Math.ceil(parts.length / 2)).join(' '), parts.slice(Math.ceil(parts.length / 2)).join(' ')]
 }

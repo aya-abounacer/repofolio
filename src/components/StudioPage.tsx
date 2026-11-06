@@ -25,7 +25,7 @@ import { clearPortfolioDraft, loadPortfolioDraft, savePortfolioDraft } from '../
 import { fetchGithubPortfolioSource } from '../lib/github'
 import { ProfilePhotoEditor } from './ProfilePhotoEditor'
 import { PrivacyControls } from './PrivacyControls'
-import { createPortfolioData, deriveSkills, getProjectsMissingDescriptions, PROJECT_DESCRIPTION_PLACEHOLDER } from '../lib/portfolio'
+import { createPortfolioData, deriveSkills, getProjectsMissingDescriptions, PROJECT_DESCRIPTION_PLACEHOLDER, selectPortfolioTemplate } from '../lib/portfolio'
 import { saveSharedPortfolio } from '../lib/sharing'
 import { getPortfolioReadiness } from '../lib/readiness'
 import { usePageMeta } from '../lib/seo'
@@ -33,6 +33,7 @@ import type {
   ListPortfolioSection,
   PortfolioData,
   PortfolioFont,
+  PortfolioProject,
   PortfolioSections,
   PortfolioTemplate,
   PortfolioTimelineItem,
@@ -47,6 +48,19 @@ type PreviewMode = 'desktop' | 'mobile'
 type ListSectionKey = 'experience' | 'education' | 'certifications' | 'achievements'
 
 const ACCENT_PRESETS = ['#7cdd5b', '#7c8cff', '#ff6b6b', '#f4b942', '#b66cff', '#25c7b7']
+
+function mergeImportedProjectLanguages(projects: PortfolioProject[], importedProjects: PortfolioProject[]) {
+  const importedById = new Map(importedProjects.map((project) => [project.id, project]))
+  return projects.map((project) => {
+    const imported = importedById.get(project.id)
+    if (!imported) return project
+    return {
+      ...project,
+      technologies: [...new Set([...imported.technologies, ...project.technologies])],
+      languagesHydrated: Boolean(project.languagesHydrated || imported.languagesHydrated),
+    }
+  })
+}
 
 export function StudioPage({ username }: StudioPageProps) {
   const [portfolio, setPortfolio] = useState<PortfolioData | null>(null)
@@ -79,6 +93,16 @@ export function StudioPage({ username }: StudioPageProps) {
         setSavedAt(draft.savedAt)
         setSaveStatus('saved')
         setLoading(false)
+        const projectsToHydrate = draft.portfolio.projects.filter((project) => project.selected && !project.languagesHydrated)
+        if (projectsToHydrate.length) {
+          try {
+            const source = await fetchGithubPortfolioSource(username, projectsToHydrate.map((project) => project.originalName))
+            const importedProjects = createPortfolioData(source.user, source.repos).projects
+            setPortfolio((current) => current ? { ...current, projects: mergeImportedProjectLanguages(current.projects, importedProjects) } : current)
+          } catch {
+            // Leave the local draft available; a later reload can retry GitHub.
+          }
+        }
         return
       }
     }
@@ -265,10 +289,16 @@ function Editor({ data, onChange, onPreview, onPhotoBusyChange, onUnpublish }: {
     setReloadingSkills(true)
     setSkillMessage('')
     try {
-      const source = await fetchGithubPortfolioSource(data.username)
+      const selectedRepoNames = data.projects.filter((project) => project.selected).map((project) => project.originalName)
+      const source = await fetchGithubPortfolioSource(data.username, selectedRepoNames)
       const imported = deriveSkills(source.repos)
-      onChange((current) => current ? { ...current, skills: imported } : current)
-      setSkillMessage(`Restored ${imported.length} skill${imported.length === 1 ? '' : 's'} from GitHub. Your other edits are unchanged.`)
+      const importedProjects = createPortfolioData(source.user, source.repos).projects
+      onChange((current) => current ? {
+        ...current,
+        skills: imported,
+        projects: mergeImportedProjectLanguages(current.projects, importedProjects),
+      } : current)
+      setSkillMessage(`Restored ${imported.length} skill${imported.length === 1 ? '' : 's'} and refreshed project languages from GitHub. Your other edits are unchanged.`)
     } catch (error) {
       setSkillMessage(error instanceof Error ? `Could not reload skills: ${error.message}` : 'Could not reload skills from GitHub. Try again.')
     } finally {
@@ -382,11 +412,7 @@ function Editor({ data, onChange, onPreview, onPhotoBusyChange, onUnpublish }: {
       </div>
 
       <EditorSection title="Template & style" description="Switch presentation without touching your content." icon={<Palette size={15} />}>
-        <div className="template-picker">
-          {(['minimal', 'modern', 'creative'] as PortfolioTemplate[]).map((template) => (
-            <TemplateOption key={template} value={template} active={data.appearance.template === template} onClick={() => patchAppearance({ template })} />
-          ))}
-        </div>
+        <span className="studio-label">Color mode</span>
         <div className="grid grid-cols-2 gap-2">
           <button className={`studio-choice ${data.appearance.mode === 'dark' ? 'studio-choice-active' : ''}`} onClick={() => patchAppearance({ mode: 'dark' })}><Moon size={14} /> Dark</button>
           <button className={`studio-choice ${data.appearance.mode === 'light' ? 'studio-choice-active' : ''}`} onClick={() => patchAppearance({ mode: 'light' })}><Sun size={14} /> Light</button>
@@ -394,10 +420,18 @@ function Editor({ data, onChange, onPreview, onPhotoBusyChange, onUnpublish }: {
         <label className="block">
           <span className="studio-label">Accent color</span>
           <div className="accent-row">
-            {ACCENT_PRESETS.map((accent) => <button key={accent} type="button" aria-label={`Use ${accent}`} className={`accent-swatch ${data.appearance.accent.toLowerCase() === accent.toLowerCase() ? 'accent-swatch-active' : ''}`} style={{ background: accent }} onClick={() => patchAppearance({ accent })} />)}
+            {(data.appearance.template === 'editorial' ? ['#c4492d', ...ACCENT_PRESETS] : data.appearance.template === 'studio' ? ['#ed996f', ...ACCENT_PRESETS] : data.appearance.template === 'technical' ? ['#3b82f6', ...ACCENT_PRESETS] : data.appearance.template === 'brutalist' ? ['#ffd93d', '#66d9ef', '#ff6b9d', '#a8e6cf', ...ACCENT_PRESETS] : ACCENT_PRESETS).map((accent) => <button key={accent} type="button" aria-label={accent === '#c4492d' ? 'Use vermilion accent' : accent === '#ed996f' ? 'Use apricot accent' : accent === '#3b82f6' ? 'Use engineering blue accent' : accent === '#ffd93d' ? 'Use poster yellow accent' : accent === '#66d9ef' ? 'Use cyan accent' : accent === '#ff6b9d' ? 'Use pink accent' : accent === '#a8e6cf' ? 'Use mint accent' : `Use ${accent}`} className={`accent-swatch ${data.appearance.accent.toLowerCase() === accent.toLowerCase() ? 'accent-swatch-active' : ''}`} style={{ background: accent }} onClick={() => patchAppearance({ accent })} />)}
             <input aria-label="Custom accent color" type="color" value={data.appearance.accent} onChange={(event) => patchAppearance({ accent: event.target.value })} className="accent-custom" />
           </div>
         </label>
+        <div>
+          <span className="studio-label">Template</span>
+          <div className="template-picker">
+            {(['minimal', 'modern', 'creative', 'editorial', 'studio', 'technical', 'brutalist'] as PortfolioTemplate[]).map((template) => (
+              <TemplateOption key={template} value={template} active={data.appearance.template === template} onClick={() => patchAppearance(selectPortfolioTemplate(data.appearance, template))} />
+            ))}
+          </div>
+        </div>
         <SelectField label="Font" value={data.appearance.font} onChange={(value) => patchAppearance({ font: value as PortfolioFont })} options={[['sans', 'Clean sans'], ['editorial', 'Editorial serif'], ['mono', 'Developer mono']]} />
       </EditorSection>
 
@@ -457,7 +491,7 @@ function Editor({ data, onChange, onPreview, onPhotoBusyChange, onUnpublish }: {
                   <div className="mt-3 space-y-3">
                     <Field label="Project title" value={project.title} onChange={(title) => patchProject(project.id, { title })} />
                     <TextArea label="Description" id={`project-description-${project.id}`} value={project.description} onChange={(description) => patchProject(project.id, { description })} rows={3} placeholder={PROJECT_DESCRIPTION_PLACEHOLDER} error={project.selected && data.sections.projects.visible && !project.description.trim() ? 'Add a description before sharing, or deselect this project.' : undefined} />
-                    <Field label="Technologies" value={project.technologies.join(', ')} onChange={(value) => patchProject(project.id, { technologies: commaList(value, 8) })} placeholder="React, TypeScript, Spring Boot" />
+                    <Field label="Languages & technologies" value={project.technologies.join(', ')} onChange={(value) => patchProject(project.id, { technologies: commaList(value) })} placeholder="TypeScript, CSS, HTML, React" />
                     <Field label="GitHub link" value={project.url} onChange={(url) => patchProject(project.id, { url })} />
                     <Field label="Live demo URL (optional)" value={project.homepage} onChange={(homepage) => patchProject(project.id, { homepage })} placeholder="https://my-project.vercel.app" />
                     <p className="project-stats">{project.featured ? 'Featured · ' : ''}{project.language || 'No primary language'} · ★ {project.stars} · Forks {project.forks}</p>
@@ -484,7 +518,7 @@ function Editor({ data, onChange, onPreview, onPhotoBusyChange, onUnpublish }: {
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="studio-label mb-0">Review your skills</p>
-              <button type="button" disabled={reloadingSkills} onClick={() => void reloadSkills()} className="studio-mini-button px-2 py-1" title="Replace this list with the latest repository languages from GitHub"><RefreshCcw size={12} /> {reloadingSkills ? 'Reloading…' : 'Reload from GitHub'}</button>
+              <button type="button" disabled={reloadingSkills} onClick={() => void reloadSkills()} className="studio-mini-button px-2 py-1" title="Refresh imported skills and selected project languages from GitHub"><RefreshCcw size={12} /> {reloadingSkills ? 'Reloading…' : 'Reload from GitHub'}</button>
             </div>
             <p className="my-3 text-xs leading-5 text-zinc-400">GitHub suggests skills from your repositories. Remove any that do not represent you. Reloading replaces this list with fresh GitHub suggestions.</p>
             {data.skills.length ? <div className="flex flex-wrap gap-2">
@@ -512,7 +546,7 @@ function Editor({ data, onChange, onPreview, onPhotoBusyChange, onUnpublish }: {
         </EditorSection>
       ))}
 
-      <EditorSection title="Shared links" description="Review or unpublish portfolios shared from this browser.">
+      <EditorSection title="Published portfolios" description="View or unpublish portfolio links created in this browser.">
         <PrivacyControls key={data.username} kind="links" username={data.username} onRemoved={onUnpublish} />
       </EditorSection>
       <EditorSection title="Links & contact" description="Only public contact details are prefilled.">
@@ -559,7 +593,8 @@ function ListSectionEditor({ section, onChange, itemLabel }: { section: ListPort
 }
 
 function TemplateOption({ value, active, onClick }: { value: PortfolioTemplate; active: boolean; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className={`template-option template-option-${value} ${active ? 'template-option-active' : ''}`}><span className="template-option-preview"><i /><i /><i /></span><strong>{capitalize(value)}</strong></button>
+  const label = value === 'creative' ? 'Signature' : value === 'studio' ? 'Atelier' : value === 'editorial' ? 'Editorial / Swiss' : value === 'technical' ? 'IDE Workspace' : value === 'brutalist' ? 'Bold / Neo-Brutalist' : capitalize(value)
+  return <button type="button" onClick={onClick} aria-pressed={active} className={`template-option template-option-${value} ${active ? 'template-option-active' : ''}`}><span className="template-option-preview" aria-hidden="true"><i /><i /><i /></span><strong>{label}</strong></button>
 }
 
 function EditorSection({ id, title, description, children, icon }: { id?: string; title: string; description: string; children: React.ReactNode; icon?: React.ReactNode }) {
@@ -591,8 +626,8 @@ function VisibilityRow(props: { label: string; checked: boolean; onChange: (chec
   return <Toggle {...props} />
 }
 
-function commaList(value: string, limit: number): string[] {
-  return [...new Set(value.split(',').map((item) => item.trim()).filter(Boolean))].slice(0, limit)
+function commaList(value: string): string[] {
+  return [...new Set(value.split(',').map((item) => item.trim()).filter(Boolean))]
 }
 
 function capitalize(value: string): string {

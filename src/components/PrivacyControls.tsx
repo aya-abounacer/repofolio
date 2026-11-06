@@ -42,8 +42,8 @@ export function PrivacyControls({ kind, username = '', onRemoved }: {
   }
 
   return <div className="space-y-3">
-    <button type="button" className="studio-mini-button" disabled={busy} onClick={() => void load()}>{busy ? 'Working…' : kind === 'photos' ? 'Past uploads' : 'Load my shared links'}</button>
-    {items?.length === 0 ? <p className="text-xs text-zinc-400">No {kind === 'photos' ? 'uploaded photos' : 'active shared links'} in this session.</p> : null}
+    <button type="button" className="studio-mini-button" disabled={busy} onClick={() => void load()}>{busy ? 'Working…' : kind === 'photos' ? 'Past uploads' : 'View published links'}</button>
+    {items?.length === 0 ? <p className="text-xs text-zinc-400">No {kind === 'photos' ? 'uploaded photos' : 'published portfolio links'} in this browser session.</p> : null}
     <div className="max-h-72 space-y-2 overflow-y-auto">
       {items?.map(item => <div key={item.id} className="flex items-center gap-3 rounded-lg border border-white/15 p-2">
         {kind === 'photos' && !item.deleted_at ? <img src={`/api/profile-photo?id=${item.id}`} alt="Uploaded profile photo" className="h-10 w-10 rounded object-cover" /> : null}

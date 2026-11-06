@@ -10,7 +10,27 @@ import {
   normalizePortfolioData,
   PROJECT_DESCRIPTION_PLACEHOLDER,
   rankRepositories,
+  selectPortfolioTemplate,
+  TEMPLATE_APPEARANCE_DEFAULTS,
 } from './portfolio'
+
+describe('template appearance defaults', () => {
+  it.each([
+    ['minimal', 'dark', '#7cdd5b'], ['modern', 'dark', '#7cdd5b'],
+    ['creative', 'dark', '#7cdd5b'], ['editorial', 'light', '#c4492d'],
+    ['studio', 'dark', '#ed996f'], ['technical', 'dark', '#3b82f6'],
+    ['brutalist', 'light', '#ffd93d'],
+  ] as const)('starts %s with its preset and preserves saved overrides', (template, mode, accent) => {
+    const original = { template: template === 'modern' ? 'minimal' : 'modern', mode: 'light', accent: '#123456', font: 'mono' } as const
+    expect(selectPortfolioTemplate(original, template)).toEqual({ template, mode, accent, font: 'mono' })
+    const data = createPortfolioData(user, [])
+    expect(normalizePortfolioData({ ...data, appearance: { template } })?.appearance).toMatchObject({ template, mode, accent })
+    const custom = { template, mode: 'dark', accent: '#123456', font: 'mono' } as const
+    expect(normalizePortfolioData({ ...data, appearance: custom })?.appearance).toEqual(custom)
+    expect(selectPortfolioTemplate(custom, template)).toEqual(custom)
+    expect(TEMPLATE_APPEARANCE_DEFAULTS[template]).toEqual({ mode, accent })
+  })
+})
 
 const user: GitHubUser = {
   login: 'dev',
@@ -84,13 +104,14 @@ describe('createPortfolioData', () => {
   it('derives skills, technologies and keeps the full ranked repository list', () => {
     const repos = [
       repo({ id: 1, name: 'tiny', language: 'JavaScript' }),
-      repo({ id: 2, name: 'popular', language: 'TypeScript', stargazers_count: 50, forks_count: 2, topics: ['react', 'vite'] }),
+      repo({ id: 2, name: 'popular', language: 'TypeScript', languages: ['TypeScript', 'CSS', 'HTML'], stargazers_count: 50, forks_count: 2, topics: ['react', 'vite'] }),
     ]
     const result = createPortfolioData(user, repos)
     expect(result.version).toBe(3)
     expect(result.projects).toHaveLength(2)
     expect(result.projects[0].title).toBe('popular')
     expect(result.projects[0].technologies).toEqual(expect.arrayContaining(['TypeScript', 'react', 'vite']))
+    expect(result.projects[0].technologies).toEqual(expect.arrayContaining(['CSS', 'HTML']))
     expect(result.skills).toContain('TypeScript')
     expect(result.appearance.template).toBe('modern')
   })
@@ -147,6 +168,15 @@ describe('createPortfolioData', () => {
 })
 
 describe('portfolio URL codec', () => {
+  it.each(['editorial', 'studio', 'technical'] as const)('preserves %s and edited content through saved-document normalization and legacy links', (template) => {
+    const data = createPortfolioData(user, [repo({ id: 1, name: 'portfolio' })])
+    data.appearance = { template, mode: 'light', accent: '#ff6b6b', font: 'sans' }
+    data.projects[0].title = 'A human-readable project title'
+    expect(normalizePortfolioData(JSON.parse(JSON.stringify(data)))).toEqual(data)
+    expect(decodePortfolio(encodePortfolio(data))).toEqual(data)
+    expect(normalizePortfolioData({ ...data, appearance: { ...data.appearance, template: 'unknown' } })?.appearance.template).toBe('modern')
+  })
+
   it('round-trips the complete v3 data model with unicode content', () => {
     const data = createPortfolioData({ ...user, name: 'Ali العماري' }, [repo({ id: 1, name: 'portfolio' })])
     data.appearance.template = 'creative'

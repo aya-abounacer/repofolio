@@ -1,18 +1,21 @@
 import { ArrowUpRight } from 'lucide-react'
 import type { PortfolioData } from '../../types'
-import { ContactLinks, ProfileMeta, ProjectActions, ProjectMeta, RepoFolioAttribution, selectedProjects, SkillsList, Technologies, TimelineItems, VisibleNav } from './shared'
+import { ContactLinks, ProfileMeta, ProjectActions, ProjectMeta, RepoFolioAttribution, selectedProjects, SkillsList, Technologies, TimelineItems } from './shared'
+
+import { RefinedName, RefinedNav, useRefinedMotion } from './refined'
 
 export function ModernTemplate({ data }: { data: PortfolioData }) {
+  const rootRef = useRefinedMotion(data.username)
   const projects = selectedProjects(data)
   let sectionNumber = 1
   const nextNumber = () => String(sectionNumber++).padStart(2, '0')
 
   return (
-    <div className="modern-template tpl-page">
+    <div ref={rootRef} className="modern-template tpl-page template-refined">
       <div className="modern-glow" aria-hidden="true" />
       <header className="tpl-nav modern-nav">
         <a href="#top" className="tpl-brand">{data.name}</a>
-        <VisibleNav data={data} />
+        <RefinedNav data={data} />
       </header>
 
       <main id="top" className="tpl-main">
@@ -20,34 +23,15 @@ export function ModernTemplate({ data }: { data: PortfolioData }) {
           <div>
             {data.hero.availabilityConfirmed && data.hero.showStatus && data.hero.status.trim() ? <div className="modern-status"><span /> {data.hero.status}</div> : null}
             {data.hero.eyebrow ? <p className="tpl-eyebrow">{data.hero.eyebrow}</p> : null}
-            <h1>{data.name}</h1>
+            <RefinedName name={data.name} font={data.appearance.font} />
             <p className="modern-headline">{data.headline}</p>
             <p className="modern-bio">{data.bio}</p>
             <ProfileMeta data={data} />
           </div>
           {data.hero.showImage && data.avatarUrl ? (
-            <div className="modern-avatar-wrap"><div className="modern-avatar-ring"><img src={data.avatarUrl} alt={`${data.name} profile`} /></div></div>
+            <div className="modern-avatar-wrap"><div className="modern-avatar-ring refined-portrait"><img src={data.avatarUrl} alt={`${data.name} profile`} /></div></div>
           ) : null}
         </section>
-
-        {data.sections.about.visible ? (
-          <section id="about" className="modern-section">
-            <p className="tpl-section-index">{nextNumber()} / {data.sections.about.title}</p>
-            <div><h2>{data.sections.about.title}</h2><p className="tpl-body-copy">{data.sections.about.text}</p></div>
-          </section>
-        ) : null}
-
-        {data.sections.skills.visible ? (
-          <section id="skills" className="modern-section">
-            <p className="tpl-section-index">{nextNumber()} / {data.sections.skills.title}</p>
-            <div><h2>{data.sections.skills.title}</h2><SkillsList skills={data.skills} /></div>
-          </section>
-        ) : null}
-
-        {data.sections.experience.visible ? <ModernListSection id="experience" index={nextNumber()} title={data.sections.experience.title} items={data.sections.experience.items} /> : null}
-        {data.sections.education.visible ? <ModernListSection id="education" index={nextNumber()} title={data.sections.education.title} items={data.sections.education.items} /> : null}
-        {data.sections.certifications.visible ? <ModernListSection id="certifications" index={nextNumber()} title={data.sections.certifications.title} items={data.sections.certifications.items} /> : null}
-        {data.sections.achievements.visible ? <ModernListSection id="achievements" index={nextNumber()} title={data.sections.achievements.title} items={data.sections.achievements.items} /> : null}
 
         {data.sections.projects.visible ? (
           <section id="projects" className="modern-projects-section">
@@ -68,6 +52,27 @@ export function ModernTemplate({ data }: { data: PortfolioData }) {
             ) : <div className="tpl-empty-state">Select at least one repository to show your work here.</div>}
           </section>
         ) : null}
+
+        {data.sections.about.visible ? (
+          <section id="about" className="modern-section">
+            <p className="tpl-section-index">{nextNumber()} / {data.sections.about.title}</p>
+            <div><h2>{data.sections.about.title}</h2><p className="tpl-body-copy">{data.sections.about.text}</p></div>
+          </section>
+        ) : null}
+
+        {data.sections.skills.visible ? (
+          <section id="skills" className="modern-section">
+            <p className="tpl-section-index">{nextNumber()} / {data.sections.skills.title}</p>
+            <div><h2>{data.sections.skills.title}</h2><SkillsList skills={data.skills} /></div>
+          </section>
+        ) : null}
+
+        {data.sections.experience.visible ? <ModernListSection id="experience" index={nextNumber()} title={data.sections.experience.title} items={data.sections.experience.items} /> : null}
+        {data.sections.education.visible ? <ModernListSection id="education" index={nextNumber()} title={data.sections.education.title} items={data.sections.education.items} /> : null}
+        {data.sections.certifications.visible ? <ModernListSection id="certifications" index={nextNumber()} title={data.sections.certifications.title} items={data.sections.certifications.items} /> : null}
+        {data.sections.achievements.visible ? <ModernListSection id="achievements" index={nextNumber()} title={data.sections.achievements.title} items={data.sections.achievements.items} /> : null}
+
+
 
         {data.sections.contact.visible ? (
           <section id="contact" className="modern-section modern-contact">

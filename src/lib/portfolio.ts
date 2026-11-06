@@ -5,6 +5,8 @@ import type {
   PortfolioProject,
   PortfolioSections,
   PortfolioTimelineItem,
+  PortfolioAppearance,
+  PortfolioTemplate,
 } from '../types.js'
 
 import { protectedPhotoUrl } from './photoReference.js'
@@ -25,6 +27,20 @@ export function getProjectsMissingDescriptions(data: PortfolioData): PortfolioPr
 }
 
 const FALLBACK_ACCENT = '#7cdd5b'
+
+export const TEMPLATE_APPEARANCE_DEFAULTS: Record<PortfolioTemplate, Pick<PortfolioAppearance, 'mode' | 'accent'>> = {
+  minimal: { mode: 'dark', accent: FALLBACK_ACCENT },
+  modern: { mode: 'dark', accent: FALLBACK_ACCENT },
+  creative: { mode: 'dark', accent: FALLBACK_ACCENT },
+  editorial: { mode: 'light', accent: '#c4492d' },
+  studio: { mode: 'dark', accent: '#ed996f' },
+  technical: { mode: 'dark', accent: '#3b82f6' },
+  brutalist: { mode: 'light', accent: '#ffd93d' },
+}
+
+export function selectPortfolioTemplate(appearance: PortfolioAppearance, template: PortfolioTemplate): PortfolioAppearance {
+  return template === appearance.template ? appearance : { ...appearance, template, ...TEMPLATE_APPEARANCE_DEFAULTS[template] }
+}
 
 export function normalizeGithubUsername(input: string): string {
   const value = input.trim()
@@ -74,8 +90,12 @@ export function rankRepositories(repos: GitHubRepo[]): GitHubRepo[] {
 export function deriveSkills(repos: GitHubRepo[]): string[] {
   const counts = new Map<string, number>()
   repos.forEach((repo) => {
-    if (!repo.language || repo.archived || repo.language.toLowerCase() === 'jupyter notebook') return
-    counts.set(repo.language, (counts.get(repo.language) ?? 0) + 1)
+    if (repo.archived) return
+    const languages = repo.languages?.length ? repo.languages : repo.language ? [repo.language] : []
+    new Set(languages).forEach((language) => {
+      if (!language.trim() || language.toLowerCase() === 'jupyter notebook') return
+      counts.set(language, (counts.get(language) ?? 0) + 1)
+    })
   })
 
   return [...counts.entries()]
@@ -97,8 +117,8 @@ function fallbackBio(name: string, skills: string[]): string {
 }
 
 function technologiesForRepo(repo: GitHubRepo): string[] {
-  const values = [repo.language ?? '', ...(repo.topics ?? [])]
-  return [...new Set(values.map((value) => value.trim()).filter(Boolean))].slice(0, 5)
+  const values = [...(repo.languages ?? []), repo.language ?? '', ...(repo.topics ?? [])]
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))]
 }
 
 function defaultSections(): PortfolioSections {
@@ -169,6 +189,7 @@ export function createPortfolioData(user: GitHubUser, repos: GitHubRepo[]): Port
     homepage: repo.homepage ?? '',
     language: repo.language ?? '',
     technologies: technologiesForRepo(repo),
+    languagesHydrated: Boolean(repo.languages?.length),
     stars: repo.stargazers_count,
     forks: repo.forks_count,
     selected: defaultSelectedIds.has(repo.id),
@@ -218,9 +239,9 @@ function asBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback
 }
 
-function normalizeAccent(value: unknown): string {
-  const accent = asString(value, FALLBACK_ACCENT)
-  return /^#[0-9a-f]{6}$/i.test(accent) ? accent : FALLBACK_ACCENT
+function normalizeAccent(value: unknown, fallback = FALLBACK_ACCENT): string {
+  const accent = asString(value, fallback)
+  return /^#[0-9a-f]{6}$/i.test(accent) ? accent : fallback
 }
 
 function normalizeTimelineItems(value: unknown): PortfolioTimelineItem[] {
@@ -249,7 +270,7 @@ function normalizeProject(value: unknown, index: number): PortfolioProject | nul
   const title = asString(raw.title, legacyName || originalName)
   const language = asString(raw.language)
   const technologies = Array.isArray(raw.technologies)
-    ? raw.technologies.filter((item): item is string => typeof item === 'string').slice(0, 8)
+    ? raw.technologies.filter((item): item is string => typeof item === 'string')
     : language ? [language] : []
 
   return {
@@ -261,6 +282,7 @@ function normalizeProject(value: unknown, index: number): PortfolioProject | nul
     homepage: asString(raw.homepage),
     language,
     technologies,
+    languagesHydrated: asBoolean(raw.languagesHydrated, false),
     stars: typeof raw.stars === 'number' ? raw.stars : 0,
     forks: typeof raw.forks === 'number' ? raw.forks : 0,
     selected: asBoolean(raw.selected, true),
@@ -343,8 +365,9 @@ export function normalizePortfolioData(value: unknown): PortfolioData | null {
 
   const heroRaw = raw.hero && typeof raw.hero === 'object' ? raw.hero as Record<string, unknown> : {}
   const appearanceRaw = raw.appearance && typeof raw.appearance === 'object' ? raw.appearance as Record<string, unknown> : {}
-  const template = appearanceRaw.template === 'minimal' || appearanceRaw.template === 'creative' ? appearanceRaw.template : 'modern'
-  const mode = appearanceRaw.mode === 'light' ? 'light' : 'dark'
+  const template = appearanceRaw.template === 'minimal' || appearanceRaw.template === 'creative' || appearanceRaw.template === 'editorial' || appearanceRaw.template === 'studio' || appearanceRaw.template === 'technical' || appearanceRaw.template === 'brutalist' ? appearanceRaw.template : 'modern'
+  const defaults = TEMPLATE_APPEARANCE_DEFAULTS[template]
+  const mode = appearanceRaw.mode === 'light' || appearanceRaw.mode === 'dark' ? appearanceRaw.mode : defaults.mode
   const font = appearanceRaw.font === 'editorial' || appearanceRaw.font === 'mono' ? appearanceRaw.font : 'sans'
   const sections = normalizeSections(raw.sections)
   if (bio.trim() && sections.about.text.trim() === bio.trim()) {
@@ -375,7 +398,7 @@ export function normalizePortfolioData(value: unknown): PortfolioData | null {
     appearance: {
       template,
       mode,
-      accent: normalizeAccent(appearanceRaw.accent),
+      accent: normalizeAccent(appearanceRaw.accent, defaults.accent),
       font,
     },
     sections,

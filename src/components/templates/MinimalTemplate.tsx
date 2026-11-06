@@ -1,31 +1,27 @@
 import { ArrowUpRight } from 'lucide-react'
 import type { PortfolioData } from '../../types'
-import { ContactLinks, ProfileMeta, ProjectActions, ProjectMeta, RepoFolioAttribution, selectedProjects, SkillsList, Technologies, TimelineItems, VisibleNav } from './shared'
+import { ContactLinks, ProfileMeta, ProjectActions, ProjectMeta, RepoFolioAttribution, selectedProjects, SkillsList, Technologies, TimelineItems } from './shared'
+
+import { RefinedName, RefinedNav, useRefinedMotion } from './refined'
 
 export function MinimalTemplate({ data }: { data: PortfolioData }) {
+  const rootRef = useRefinedMotion(data.username)
   const projects = selectedProjects(data)
   return (
-    <div className="minimal-template tpl-page">
-      <header className="tpl-nav minimal-nav"><a href="#top" className="tpl-brand">{data.name}</a><VisibleNav data={data} /></header>
+    <div ref={rootRef} className="minimal-template tpl-page template-refined">
+      <header className="tpl-nav minimal-nav"><a href="#top" className="tpl-brand">{data.name}</a><RefinedNav data={data} /></header>
       <main id="top" className="tpl-main minimal-main">
         <section className="minimal-hero">
           <div className="minimal-hero-copy">
             {data.hero.eyebrow ? <p className="tpl-eyebrow">{data.hero.eyebrow}</p> : null}
-            <h1>{data.name}</h1>
+            <RefinedName name={data.name} font={data.appearance.font} />
             <p className="minimal-headline">{data.headline}</p>
             <p className="minimal-bio">{data.bio}</p>
             <ProfileMeta data={data} />
             {data.hero.availabilityConfirmed && data.hero.showStatus && data.hero.status.trim() ? <p className="minimal-status">● {data.hero.status}</p> : null}
           </div>
-          {data.hero.showImage && data.avatarUrl ? <img className="minimal-avatar" src={data.avatarUrl} alt={`${data.name} profile`} /> : null}
+          {data.hero.showImage && data.avatarUrl ? <img className="minimal-avatar refined-portrait" src={data.avatarUrl} alt={`${data.name} profile`} /> : null}
         </section>
-
-        {data.sections.about.visible ? <MinimalTextSection id="about" title={data.sections.about.title}><p className="tpl-body-copy">{data.sections.about.text}</p></MinimalTextSection> : null}
-        {data.sections.skills.visible ? <MinimalTextSection id="skills" title={data.sections.skills.title}><SkillsList skills={data.skills} /></MinimalTextSection> : null}
-        {data.sections.experience.visible ? <MinimalTextSection id="experience" title={data.sections.experience.title}><TimelineItems items={data.sections.experience.items} /></MinimalTextSection> : null}
-        {data.sections.education.visible ? <MinimalTextSection id="education" title={data.sections.education.title}><TimelineItems items={data.sections.education.items} /></MinimalTextSection> : null}
-        {data.sections.certifications.visible ? <MinimalTextSection id="certifications" title={data.sections.certifications.title}><TimelineItems items={data.sections.certifications.items} /></MinimalTextSection> : null}
-        {data.sections.achievements.visible ? <MinimalTextSection id="achievements" title={data.sections.achievements.title}><TimelineItems items={data.sections.achievements.items} /></MinimalTextSection> : null}
 
         {data.sections.projects.visible ? (
           <section id="projects" className="minimal-section">
@@ -41,6 +37,15 @@ export function MinimalTemplate({ data }: { data: PortfolioData }) {
             ))}</div> : <div className="tpl-empty-state">Select at least one repository to show your work here.</div>}
           </section>
         ) : null}
+
+        {data.sections.about.visible ? <MinimalTextSection id="about" title={data.sections.about.title}><p className="tpl-body-copy">{data.sections.about.text}</p></MinimalTextSection> : null}
+        {data.sections.skills.visible ? <MinimalTextSection id="skills" title={data.sections.skills.title}><SkillsList skills={data.skills} /></MinimalTextSection> : null}
+        {data.sections.experience.visible ? <MinimalTextSection id="experience" title={data.sections.experience.title}><TimelineItems items={data.sections.experience.items} /></MinimalTextSection> : null}
+        {data.sections.education.visible ? <MinimalTextSection id="education" title={data.sections.education.title}><TimelineItems items={data.sections.education.items} /></MinimalTextSection> : null}
+        {data.sections.certifications.visible ? <MinimalTextSection id="certifications" title={data.sections.certifications.title}><TimelineItems items={data.sections.certifications.items} /></MinimalTextSection> : null}
+        {data.sections.achievements.visible ? <MinimalTextSection id="achievements" title={data.sections.achievements.title}><TimelineItems items={data.sections.achievements.items} /></MinimalTextSection> : null}
+
+
 
         {data.sections.contact.visible ? <MinimalTextSection id="contact" title={data.sections.contact.title}><p className="tpl-body-copy">{data.sections.contact.text}</p><ContactLinks data={data} /></MinimalTextSection> : null}
       </main>
