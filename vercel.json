@@ -5,6 +5,18 @@
       "destination": "/index.html"
     },
     {
+      "source": "/privacy",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/index.html"
+    },
+    {
       "source": "/studio/:username",
       "destination": "/index.html"
     },
