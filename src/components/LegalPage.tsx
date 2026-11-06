@@ -113,7 +113,10 @@ function ContactContent() {
       <p>Tfoliot is an independently operated online service based in Morocco.</p>
       <p>For support, privacy requests, copyright concerns, content reports, or questions about a shared portfolio, email:</p>
       <p className="legal-contact-card"><Mail size={18} /><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></p>
-      <p>Please include the relevant Tfoliot URL, GitHub username, or shared portfolio link when it helps explain the request. Do not send passwords, private keys, or other sensitive credentials by email.</p>
+      <h2>Reporting a shared portfolio</h2>
+      <p>To report a shared portfolio, email the link to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> and explain what should be reviewed, such as copyright concerns, impersonation, unlawful content, or personal information that should not be public.</p>
+      <p>Please include the relevant Tfoliot URL, shared portfolio link, and a concise description of the issue. If you are requesting removal of your own shared link, you can also use the published-links controls in the browser session that created it. Tfoliot may restrict or remove reported content when appropriate.</p>
+      <p>Do not send passwords, private keys, or other sensitive credentials by email.</p>
     </div>
   )
 }
