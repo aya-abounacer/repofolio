@@ -17,14 +17,26 @@ export default async function handler(
     });
   }
 
+  const client = await pool.connect();
+
   try {
     const existingSessionId = req.cookies.session_id;
     const ipAddress = req.headers["x-forwarded-for"] || null;
     const userAgent = req.headers["user-agent"] || null;
     const country = req.headers["x-vercel-ip-country"] || null;
+    const eventType =
+      req.body?.event_type === "generated_portfolio"
+        ? "generated_portfolio"
+        : "visited";
 
+    await client.query("BEGIN");
+
+    let sessionId: string = "";
+    let isReusedSession = false; // true only if the cookie's id matched a row we just updated
+
+    // try to reuse the session from the cookie, if there is one
     if (existingSessionId) {
-      const result = await pool.query(
+      const result = await client.query(
         `
         UPDATE sessions
         SET
@@ -37,45 +49,60 @@ export default async function handler(
         `,
         [existingSessionId, ipAddress, userAgent, country]
       );
-      if (result.rowCount && result.rowCount > 0) {
-        return res.json({
-          success: true,
-          sessionId: existingSessionId,
-          existing: true,
-    });
-   }
-  }
 
-      
+      if (result.rowCount) { //if the Update changed at least one row
+        sessionId = existingSessionId;
+        isReusedSession = true;
+      }
+    }
 
-    const sessionId = crypto.randomUUID();
+    // covers both cases: no cookie at all, OR cookie present but UPDATE matched nothing
+    if (!isReusedSession) { //if !isReusedSession ===true
+      sessionId = crypto.randomUUID();
+      await client.query(
+        `
+        INSERT INTO sessions (id, ip_address, user_agent, country)
+        VALUES ($1, $2, $3, $4)
+        `,
+        [sessionId, ipAddress, userAgent, country]
+      );
+    }
 
-    await pool.query(
+    // always log the event, regardless of which branch above ran
+    await client.query(
       `
-      INSERT INTO sessions (id, ip_address, user_agent, country)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO events (session_id, event_type)
+      VALUES ($1, $2)
       `,
-      [sessionId, ipAddress, userAgent, country]
+      [sessionId, eventType]
     );
 
-    res.setHeader(
-      "Set-Cookie",
-      `session_id=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${
-        process.env.NODE_ENV === "production" ? "; Secure" : ""
-      }`
-    );
+    await client.query("COMMIT");
+
+    if (!isReusedSession) {
+      res.setHeader(
+        "Set-Cookie",
+        `session_id=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${
+          process.env.NODE_ENV === "production" ? "; Secure" : ""
+        }`
+      );
+    }
 
     return res.json({
       success: true,
       sessionId,
-      existing: false,
+      existing: isReusedSession,
+      eventType,
     });
   } catch (error) {
+    await client.query("ROLLBACK");
     console.error("Session error:", error);
 
     return res.status(500).json({
       success: false,
       error: "Failed to create session",
     });
+  } finally {
+    client.release();
   }
 }

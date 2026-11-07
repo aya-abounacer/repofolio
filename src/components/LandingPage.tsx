@@ -8,6 +8,9 @@ import KineticGrid from './ui/kinetic-grid'
 import { ScrollProgressBar } from './ScrollProgressBar'
 import { TiltedCard } from './TiltedCard'
 import TextLoop from './TextLoop'
+import { SubmitEvent } from 'react'
+import {  Sparkles, WandSparkles } from 'lucide-react'
+import { createSession } from '../lib/backend'
 
 export function LandingPage() {
   const [username, setUsername] = useState('')
@@ -19,13 +22,16 @@ export function LandingPage() {
     path: '/',
   })
 
-  function handleSubmit(event: FormEvent) {
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     const normalized = normalizeGithubUsername(username)
     if (!normalized) {
       setError('Enter a GitHub username or github.com profile URL.')
       return
     }
+    createSession(false, "generated_portfolio").catch((error) => {
+    console.error("Event logging failed:", error)
+    })
     window.location.href = `/studio/${encodeURIComponent(normalized)}`
   }
 
